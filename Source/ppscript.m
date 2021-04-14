@@ -14,12 +14,18 @@
 %           
 %       numField :: number of fields to be read
 %
-function faillist = ppscript(working_dir,filespec,numField)
+function [faillist, result] = ppscript(working_dir,filespec,numField)
+% Result is either true if the process completed successfully or a char
+% array describing the error if it did not.
+
+result = true;
+
 %% Generate full file list
 faillist = {};
 filelist = dir(strcat(working_dir,'/*.dat'));
 if isempty(filelist)
-    error('ppscript attempted on empty directory');
+    result = ['Data directory not found by ppscript - ', workdir_dir];
+    error(result);
 end
 
 %Remove all empty files from the list
@@ -86,9 +92,11 @@ fid = fopen(fname);
 frame_number = str2num(fname(1:10));
 datastruct = textscan(fid,filespec,1000);
 
-    record_list(:,1) = datastruct{:,1};
+for jj=1:numel(strfind(filespec, '%f'))
+    record_list(:,jj) = datastruct{:,jj};
+end
 
-for kk=2:numField
+for kk=(numel(strfind(filespec, '%f'))+1):numField
     %boolean data is written to .dat file as 'TRUE'/'FALSE' - convert to 1/0
     record_list(:,kk) = strcmp(datastruct{:,kk},'TRUE');
 end
