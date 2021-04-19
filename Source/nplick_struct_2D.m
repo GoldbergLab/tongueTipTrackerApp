@@ -1,6 +1,12 @@
-function [nl_struct,raster_struct] = nplick_struct_2D(dirlist_root)
+function [nl_struct,raster_struct, result] = nplick_struct_2D(dirlist_root)
+    % Result is either a logical true if the process completed successfully or a char array describing the error
+    result = true;
     
-    dirlist = rdir(strcat(dirlist_root,'\comb\*.mat'));
+    try
+        dirlist = rdir(strcat(dirlist_root,'\comb\*.mat'));
+    catch e
+        result = ['nplick_struct could''nt find combined/converted files in ', dirlist_root, '. Make sure you combine/convert FPGA files first using ppscript'];
+    end
 
     for i=1:numel(dirlist)     
        load(dirlist(i).name,'working_buff','start_frame','real_time');
