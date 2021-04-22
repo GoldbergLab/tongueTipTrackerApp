@@ -1,24 +1,35 @@
-function [vid_ind_arr] = align_videos_toFakeOutData_2D(dirlist_video,segdir,dirlist_lick_trials,time_aligned_trial)
+function [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trial)
+% result is either true if the processing completed successfully or a cell array of char arrays describing the error.
+result = true;
+vid_ind_arr = [];
 
-for j = 1:numel(dirlist_video)
-    dirlist = rdir(strcat(dirlist_video(j).name,'\*.avi'));
-    load(strcat(dirlist_lick_trials(j).name,'\lick_struct.mat'));
+for sessionNum = 1:numel(sessionVideoRoots)
+    videoList = rdir(fullfile(sessionVideoRoots{sessionNum},'*.avi'));
+    try
+        load(fullfile(sessionFPGARoots{sessionNum},'lick_struct.mat'));
+    catch e
+        if ~iscell(result)
+            result = {};
+        end
+        result = [result, ['Error: Could not find lick_struct.mat for the session', sessionMaskRoots{sessionNum}, '. Make sure to get lick segmentation and kinematics first.']];
+        continue;
+    end
     
     %Time aligned Trial
     tal = time_aligned_trial;
     
     %% Get Times of all the videos
         vid_real_time = [];
-    for i=1:numel(dirlist)        
-        name_cells = strsplit(dirlist(i).name,'\');
+    for i=1:numel(videoList)        
+        name_cells = strsplit(videoList(i).name,'\');
         name_cells = strsplit(name_cells{end});
         trial_time = str2num(name_cells{5})/24+str2num(name_cells{6})/(24*60)+str2num(name_cells{7})/(24*60*60);
         vid_real_time(i) = trial_time;
     end
     
     %% Align Time stamps
-    spout_time = mod(lick_struct(tal(j,2)).real_time,1);
-    vid_time = vid_real_time(tal(j,1));
+    spout_time = mod(lick_struct(tal(sessionNum,2)).real_time,1);
+    vid_time = vid_real_time(tal(sessionNum,1));
     
     tdiff = (spout_time - vid_time);
     
@@ -36,15 +47,15 @@ for j = 1:numel(dirlist_video)
         end
     end 
         
-    load(strcat(segdir(j).name,'\t_stats.mat'),'t_stats')
+    load(strcat(sessionMaskRoots(sessionNum).name,'\t_stats.mat'),'t_stats')
     l_sp_struct = lick_struct;    
-    vid_ind_arr{j} = vid_index;
+    vid_ind_arr{sessionNum} = vid_index;
     
     %% Assign Type of Lick   
     t_stats = assign_lick_type(t_stats,l_sp_struct,vid_index);
     t_stats = assign_fakeout_type_2D(t_stats,l_sp_struct,vid_index);
     
     %% Save the Struct
-    save(strcat(segdir(j).name,'\t_stats.mat'),'t_stats','l_sp_struct','vid_index');
+    save(strcat(sessionMaskRoots(sessionNum).name,'\t_stats.mat'),'t_stats','l_sp_struct','vid_index');
 
 end
