@@ -47,15 +47,16 @@ for sessionNum = 1:numel(sessionVideoRoots)
         end
     end 
         
-    load(strcat(sessionMaskRoots(sessionNum).name,'\t_stats.mat'),'t_stats')
+    load(strcat(sessionMaskRoots{sessionNum},'\t_stats.mat'),'t_stats')
     l_sp_struct = lick_struct;    
     vid_ind_arr{sessionNum} = vid_index;
     
     %% Assign Type of Lick   
-    t_stats = assign_lick_type(t_stats,l_sp_struct,vid_index);
+    t_stats = assign_lick_type_2D(t_stats,l_sp_struct,vid_index);
     t_stats = assign_fakeout_type_2D(t_stats,l_sp_struct,vid_index);
+    t_stats = assign_CSM_SSM(t_stats);
     
     %% Save the Struct
-    save(strcat(sessionMaskRoots(sessionNum).name,'\t_stats.mat'),'t_stats','l_sp_struct','vid_index');
+    save(strcat(sessionMaskRoots{sessionNum},'\t_stats.mat'),'t_stats','l_sp_struct','vid_index');
 
 end

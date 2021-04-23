@@ -7,8 +7,8 @@ for i=1:numel(t_stats)
 end
 
 for i=1:numel(t_stats)
-    if t_stats(i).trial_num == 1
-        t_stats(i).trial_num = l_sp_struct(i).analog_lick;
+    if t_stats(i).lick_index == 1
+        t_stats(i).analog_lick = l_sp_struct(t_stats(i).trial_num).analog_lick;
     end
 end
 
