@@ -1,4 +1,4 @@
-function [ t_stats_stack ] = make_t_struct(sessionDataRoots, dir_vid, save_flag, streak_num)
+function [ t_stats_stack ] = make_t_struct(sessionDataRoots, dir_vid, save_flag, streak_num, fiducial)
 %MAKE_XY_STRUCT Summary of this function goes here
 %   get xy points from t_struct, separate them into individual licks and
 %   estimate kinematic parameters (e.g. pathlength, speed, direction)
@@ -487,6 +487,10 @@ if numel(streak_num)<1
     delete(f);
 end
 
+for sessionNum = 1:numel(sessionDataRoots)
+    % Add in fiducial-referenced kinematics:
+    t_stats_stack{sessionNum} = addFiducialReferencedCoordinates(t_stats_stack{sessionNum}, fiducial{sessionNum});
+end
 
 if save_flag
     for sessionNum = 1:numel(sessionDataRoots)
