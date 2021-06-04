@@ -40,21 +40,25 @@
 %--------------------------------------------------------------------------
 function [tip_coords, centroid_coords, volume, top_area, bot_area, ...
     top_centroid, bot_centroid, im_scale, im_shift, coords_b, t_boundary] = ...
-    tongueTipTracker(top_frame, bot_frame, params, vid_filename,centroid_avoid)
+    tongueTipTracker(top_frame, bot_frame, params, vid_filename,centroid_avoid, illustrate)
 %--------------------------------------------------------------------------
 %% initialization and parameters
 
 % check function inputs
-if ~exist('params','var')
+if ~exist('params','var') || isempty(params)
     params = setTrackParams() ;
 end
 
-if ~exist('vid_filename','var')
+if ~exist('vid_filename','var') || isempty(vid_filename)
     vid_filename = [] ;   
 end
 
-if ~exist('centroid_avoid','var')
+if ~exist('centroid_avoid','var') || isempty(centroid_avoid)
     centroid_avoid = [] ;   
+end
+
+if ~exist('illustrate', 'var') || isempty(illustrate)
+    illustrate = false;
 end
 
 % read out parameters from structure
@@ -99,8 +103,27 @@ else
     %% process masks
     flag = 0;
  
+    if illustrate
+        f = figure;
+        ax = subplot(4, 5, 1);
+        imshow(bot_frame);
+        title(ax, 'Raw bot frame');
+        ax = subplot(4, 5, 2);
+        imshow(top_frame);
+        title(ax, 'Raw top frame');
+    end
+    
     [bot_frame, top_frame, bot_s, top_s, im_shift, im_scale] = ...
         processTongueMasks(bot_frame, top_frame, params, top_dim,centroid_avoid) ;
+
+    if illustrate
+        ax = subplot(4, 5, 3);
+        imshow(bot_frame);
+        title(ax, 'Processed bot frame');
+        ax = subplot(4, 5, 4);
+        imshow(top_frame);
+        title(ax, 'Processed top frame');
+    end
 
     % grab some image info from regionprops structs
     try
@@ -147,6 +170,12 @@ else
         % get voxel x, y, z coordinates
         [R,C,V] = ind2sub(size(vox),find(vox > 0)); %finds index of 'on' pixels
         coords = [C, V, R] ;
+
+        if illustrate
+            ax = subplot(4, 5, [6, 7, 11, 12, 16, 17]);
+            scatter3(ax, coords(:, 1), coords(:, 2), coords(:, 3), 5);
+            title(ax, '3D tongue volume');
+        end
         
         % get voxel boundary coordinates
         vox_erode = imerode(vox,sphere_se) ;
@@ -164,15 +193,43 @@ else
         clear vox_bot vox_top vox vox_erode
         %---------------------------------------------
         % make guess for tip vector        
-        [~, tip_guess_hat, ~, ~] = makeTipGuess(coords, ...
+        [tip_guess_1, tip_guess_hat, candidate_coords_1, ~] = makeTipGuess(coords, ...
             centroid, init_vec_1, theta_max_1, dist_prctile_1) ;
         
+        if illustrate
+            ax = subplot(4, 5, [8, 9, 10, 13, 14, 15, 18, 19, 20]);
+            s = scatter3(ax, coords_b(:, 1), coords_b(:, 2), coords_b(:, 3), ...
+                10, 'DisplayName', 'Tongue boundary');
+            hold(ax, 'on');
+            vs = 20;
+            quiver3(ax, centroid(1), centroid(2), centroid(3), ...
+                vs*init_vec_1(1), vs*init_vec_1(2), vs*init_vec_1(3), 'red', 'DisplayName', 'Initial tip direction guess');
+            quiver3(ax, centroid(1), centroid(2), centroid(3), ...
+                vs*tip_guess_hat(1), vs*tip_guess_hat(2), vs*tip_guess_hat(3), 'magenta', 'DisplayName', 'Revised tip direction guess');
+            scatter3(ax, candidate_coords_1(:, 1), candidate_coords_1(:, 2), candidate_coords_1(:, 3), ...
+                15, 'MarkerEdgeColor', 'magenta', 'DisplayName', '1st candidate coords')
+            title(ax, 'Tip guess results');
+            legend(ax);
+        end
         %---------------------------------------------
         % refine guess for tip vector
         init_vec_2 = tip_guess_hat ;
         
-        [tip_guess_2, ~, ~, ~] = makeTipGuess(coords_b, ...
+        [tip_guess_2, ~, candidate_coords_2, ~] = makeTipGuess(coords_b, ...
             centroid, init_vec_2, theta_max_2, dist_prctile_2) ;
+
+        if illustrate
+            fprintf('Final tip coords: %f %f %f\n', tip_guess_2(1), tip_guess_2(2), tip_guess_2(3));
+            scatter3(ax, candidate_coords_2(:, 1), candidate_coords_2(:, 2), candidate_coords_2(:, 3), ...
+                20, 'MarkerEdgeColor', 'yellow', 'DisplayName', '2nd candidate coords')
+            scatter3(ax, tip_guess_2(1), tip_guess_2(2), tip_guess_2(3), ...
+                90, 'Marker', 'diamond', 'MarkerEdgeColor', 'green', 'MarkerFaceColor', 'green', 'DisplayName', 'Final tip guess')
+            
+            projected_tip_coords = project_tip_guess_on_boundary(tip_guess_2, centroid, candidate_coords_2);
+            scatter3(ax, projected_tip_coords(1), projected_tip_coords(2), projected_tip_coords(3), ...
+                90, 'Marker', 'diamond', 'MarkerEdgeColor', 'cyan', 'MarkerFaceColor', 'cyan', 'DisplayName', 'Projected tip guess')
+            
+        end
         
         %---------------------------------------------
         % store info on vox coordinates
