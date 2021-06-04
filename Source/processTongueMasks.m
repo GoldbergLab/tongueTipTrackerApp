@@ -59,6 +59,7 @@ if length(top_s) > 1 && numel(centroid_avoid)
     'ConvexImage','Solidity') ;
 end
 
+% Merge any blobs that are close to each other for top frame
 se_radius = se_radius_start ;
 while (length(top_s) > 1) && (se_radius < 10)
     se = strel('disk',se_radius) ;
@@ -71,6 +72,7 @@ areas = [top_s.Area] ;
 [~, max_ind] = max(areas) ;
 top_s = top_s(max_ind) ;
 
+% Merge any blobs that are close to each other for top frame
 se_radius = se_radius_start ;
 while (length(bot_s) > 1) && (se_radius < 20)
     se = strel('disk',se_radius) ;
@@ -104,7 +106,8 @@ end
 %---------------------------------------------
 %% determine scale for top image
 % (find difference in right x coordinate of bounding box for the two 
-%   objects. scale the top image so it matches)
+%   objects. scale the top image so the right-hand edges of the main blobs 
+%   in the top and side views matche)
 try
     bot_bbox_edge = bot_s.BoundingBox(1) + bot_s.BoundingBox(3) ;
     top_bbox_edge = top_s.BoundingBox(1) + top_s.BoundingBox(3) ;
@@ -117,7 +120,6 @@ end
 
 %---------------------------------------------
 %% perform translation/scaling to make tip regions match
-
 top_frame = imtranslate(top_frame,[im_shift, 0]) ;
 top_frame = imresize(top_frame, im_scale) ;
 
