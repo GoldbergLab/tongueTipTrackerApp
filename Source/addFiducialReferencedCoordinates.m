@@ -24,6 +24,11 @@ function t_stats = addFiducialReferencedCoordinates(t_stats, fiducialPoint)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Loop over t_stats struct array, adding new fiducial-referenced fields
+
+x_tips = {t_stats.tip_x};
+first_x_tip = cellfun(@(x) x(1), x_tips);
+fiducial_xMed = median(first_x_tip);
+
 for k = 1:length(t_stats)
     t_stats(k).tip_xf = t_stats(k).tip_x - fiducialPoint(1);
     t_stats(k).tip_yf = t_stats(k).tip_y - fiducialPoint(2);
@@ -32,5 +37,8 @@ for k = 1:length(t_stats)
     t_stats(k).centroid_xf = t_stats(k).centroid_x - fiducialPoint(1);
     t_stats(k).centroid_yf = t_stats(k).centroid_y - fiducialPoint(2);
     t_stats(k).centroid_zf = t_stats(k).centroid_z - fiducialPoint(3);
+    
+    t_stats(k).tip_xm = t_stats(k).tip_x - fiducial_xMed;
+    t_stats(k).centroid_xm = t_stats(k).centroid_x - fiducial_xMed;
 
 end
