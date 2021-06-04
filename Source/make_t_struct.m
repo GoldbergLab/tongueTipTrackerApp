@@ -89,6 +89,7 @@ for sessionNum = 1:numel(sessionDataRoots)
         onsetOffsetPairs = [];
         lickNum=1;
         for onsetNum = 1:numel(onset_vect)
+            % Find the # of offsets between this onset and the next one
             if onsetNum==numel(onset_vect)
                 % This is the last onset
                 offsetNums = find((offset_vect-onset_vect(onsetNum))>0 & ((offset_vect-numel(nan_vect))<0));
@@ -96,6 +97,9 @@ for sessionNum = 1:numel(sessionDataRoots)
                 offsetNums = find((offset_vect-onset_vect(onsetNum))>0 & ((offset_vect-onset_vect(onsetNum+1))<0));
             end
             
+            % If the next offset is at least 35 ms after this onset, then
+            % it is considered a new lick. If not, ignore the next offset
+            % and onset.
             if numel(offsetNums)&&(offset_vect(offsetNums)-onset_vect(onsetNum))>35
                 % We have found at least one possible offset and
                 %   The 
