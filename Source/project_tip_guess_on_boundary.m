@@ -14,8 +14,9 @@ boundary_vecs_hat = boundary_vecs ./ vecnorm(boundary_vecs')';
 
 % Find the vector that extends from each boundary point perpendicularly to
 % the centroid-tip_guess line.
-perpendicular_vecs = boundary_vecs - (boundary_vecs_hat * tip_vec_hat') .* tip_vec;
+perpendicular_vecs = boundary_vecs - (boundary_vecs * tip_vec_hat') .* tip_vec_hat;
 if size(perpendicular_vecs, 1) ~= 3
+    
 % vecnorm will norm across the second dimension, so we have to make sure
 % our perpendicular vectors are arranged that way.
     perpendicular_vecs = perpendicular_vecs';
@@ -27,8 +28,6 @@ distances_from_line = vecnorm(perpendicular_vecs);
 % Find which boundary point is closest to the line
 [~, minIdx] = min(distances_from_line);
 
-% Select the tip coordinates of the boundary point closest to the line.
-tip_coords = boundary_coords(minIdx, :);
-
-% scatter3(tip_coords(1), tip_coords(2), tip_coords(3), 'MarkerEdgeColor', 'green', 'MarkerFaceColor', 'green')
-% disp('hi')
+% Select the tip coordinates of the boundary point closest to the line, and
+%   project that point onto the line.
+tip_coords = boundary_coords(minIdx, :) - perpendicular_vecs(:, minIdx)';
