@@ -218,22 +218,22 @@ else
         [tip_guess_2, ~, candidate_coords_2, ~] = makeTipGuess(coords_b, ...
             centroid, init_vec_2, theta_max_2, dist_prctile_2) ;
 
+        projected_tip_coords = project_tip_guess_on_boundary(tip_guess_2, centroid, candidate_coords_2);
+
         if illustrate
-            fprintf('Final tip coords: %f %f %f\n', tip_guess_2(1), tip_guess_2(2), tip_guess_2(3));
             scatter3(ax, candidate_coords_2(:, 1), candidate_coords_2(:, 2), candidate_coords_2(:, 3), ...
                 20, 'MarkerEdgeColor', 'yellow', 'DisplayName', '2nd candidate coords')
             scatter3(ax, tip_guess_2(1), tip_guess_2(2), tip_guess_2(3), ...
                 90, 'Marker', 'diamond', 'MarkerEdgeColor', 'green', 'MarkerFaceColor', 'green', 'DisplayName', 'Final tip guess')
             
-            projected_tip_coords = project_tip_guess_on_boundary(tip_guess_2, centroid, candidate_coords_2);
             scatter3(ax, projected_tip_coords(1), projected_tip_coords(2), projected_tip_coords(3), ...
-                90, 'Marker', 'diamond', 'MarkerEdgeColor', 'cyan', 'MarkerFaceColor', 'cyan', 'DisplayName', 'Projected tip guess')
+                120, 'Marker', 'diamond', 'MarkerEdgeColor', 'black', 'MarkerFaceColor', 'cyan', 'DisplayName', 'Projected tip guess')
             
         end
         
         %---------------------------------------------
         % store info on vox coordinates
-        tip_coords = tip_guess_2 ;
+        tip_coords = projected_tip_coords ;
         centroid_coords = centroid ;
         
         % decimate output to reduce memory costs
