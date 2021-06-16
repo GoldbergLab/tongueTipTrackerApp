@@ -26,11 +26,12 @@ function [nl_struct,raster_struct, result] = nplick_struct_2D(dirlist_root)
        nl_struct(i).rw_live = sensor_on_off_times(working_buff(:,8));             
        nl_struct(i).real_time = real_time;
        nl_struct(i).analog_lick = working_buff(:,3);
-       
-       actuator1_ML = working_buff(:,1);
-       actuator2_AP = working_buff(:,2);
+       nl_struct(i).actuator1_ML_command = working_buff(:,1);
+       nl_struct(i).actuator2_AP_command = working_buff(:,2);
        
        try
+           % Calculate start/end times of any reward cue periods in this
+           %    .dat file (rw_cue)
            nl_struct(i).rw_cue = sensor_on_off_times(working_buff(:,9));
            if numel(nl_struct(i).rw_cue)>0               
                rw_cue_onset = nl_struct(i).rw_cue(:,1);
@@ -55,8 +56,8 @@ function [nl_struct,raster_struct, result] = nplick_struct_2D(dirlist_root)
                % Determine Temperature within the Rw_Cue
                try
                    %nl_struct(i).temp(j) = mean(temperature(rw_cue_onset(j):(rw_cue_offset(j)))); %for temperature
-                   nl_struct(i).actuator1_ML(j) = actuator1_ML(rw_cue_offset(j)-1); %for fakeout
-                   nl_struct(i).actuator2_AP(j) = actuator2_AP(rw_cue_offset(j)-1);
+                   nl_struct(i).actuator1_ML(j) = nl_struct(i).actuator1_ML_command(rw_cue_offset(j)-1); %for fakeout
+                   nl_struct(i).actuator2_AP(j) = nl_struct(i).actuator2_AP_command(rw_cue_offset(j)-1);
                catch
                    error=1;
                end

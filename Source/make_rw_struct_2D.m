@@ -16,6 +16,8 @@ for i = 1:numel(nl_struct)
         actuator1_ML = nl_struct(i).actuator1_ML;
         actuator2_AP = nl_struct(i).actuator2_AP;
         analog_lick = nl_struct(i).analog_lick;
+        actuator1_ML_command = nl_struct(i).actuator1_ML_command;
+        actuator2_AP_command = nl_struct(i).actuator2_AP_command;
 
         if first_time == 1
             ref_time = nl_struct(i).real_time;
@@ -30,6 +32,8 @@ for i = 1:numel(nl_struct)
             rw_trial_struct(trial_num).actuator1_ML = actuator1_ML(j);
             rw_trial_struct(trial_num).actuator2_AP = actuator2_AP(j);
             rw_trial_struct(trial_num).analog_lick = analog_lick(rw_cue(j,1):rw_cue(j,2));
+            rw_trial_struct(trial_num).actuator1_ML_command = actuator1_ML_command(rw_cue(j,1):rw_cue(j,2));
+            rw_trial_struct(trial_num).actuator2_AP_command = actuator2_AP_command(rw_cue(j,1):rw_cue(j,2));
             
             if(isempty(dispense)==0)
                 
