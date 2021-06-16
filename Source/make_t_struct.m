@@ -169,16 +169,8 @@ for sessionNum = 1:numel(sessionDataRoots)
                 pathlength_3D_c = sum(magspeed_cent);
                 pathlength_3D_t = sum(magspeed_tip);
 
-%                     % 3D Dist from Fiducial
-%                     dist_from_fid = sqrt((x_plt-fiducial(aa).top(1,1)).^2 + (y_plt-fiducial(aa).bot(1,2)).^2 + (z_plt-fiducial(aa).top(1,2)).^2);
-%                     
-
                 % Duration
                 dur = onsetOffsetPairs(lickNum,2)-onsetOffsetPairs(lickNum,1);
-
-%                     % Direction to farthest point
-%                     maxdist_loc = find(dist_from_fid == max(dist_from_fid));
-%                     [dir_traj,~] = cart2pol(x_plt(maxdist_loc(1))-fiducial(aa).top(1,1),y_plt(maxdist_loc(1))-fiducial(aa).bot(1,2));                    
 
                 % Package the kinematic data
                 mm = mm + 1;
@@ -278,11 +270,8 @@ if numel(streak_num)<1
         a = sessionNum;
         b = sessionNum + numel(sessionDataRoots);
         ax(sessionNum, 1) = subplot(numel(sessionDataRoots), 1, a);
-%        ax(sessionNum, 2) = subplot(numel(sessionDataRoots), 1, b);
         axis(ax(sessionNum, 1), 'tight');
         yticks(ax(sessionNum, 1), [0, 1]);
-%         axis(ax(sessionNum, 2), 'tight');
-%         linkaxes(ax(sessionNum, :), 'x');
         trialIdx = find(laser_trial{sessionNum}==0);
         xticks(ax(sessionNum, 1), min(trialIdx):max(trialIdx));
         if numel(response_bin{sessionNum}(laser_trial{sessionNum}==0))
