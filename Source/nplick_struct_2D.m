@@ -1,7 +1,14 @@
-function [nl_struct,raster_struct, result] = nplick_struct_2D(dirlist_root)
+function [nl_struct,raster_struct, result] = nplick_struct_2D(dirlist_root, varargin)
     % Result is either a logical true if the process completed successfully or a char array describing the error
     result = true;
     
+    % Check if output plots are desired
+    if nargin < 2
+        plotOutput = false;
+    else
+        plotOutput = varargin{1};
+    end
+
     try
         dirlist = rdir(strcat(dirlist_root,'\comb\*.mat'));
     catch e
@@ -70,7 +77,7 @@ function [nl_struct,raster_struct, result] = nplick_struct_2D(dirlist_root)
 save(strcat(dirlist_root,'\nl_struct.mat'),'nl_struct');
     
 % raster_struct = 1;
-       [rw_lick_onset,laser_index,ind_difflow,ili,iri,dispense_onset] = raster_lick(nl_struct,1);
+       [rw_lick_onset,laser_index,ind_difflow,ili,iri,dispense_onset] = raster_lick(nl_struct,plotOutput);
        
        raster_struct.rw_lick = rw_lick_onset;
        raster_struct.laser_index = laser_index;
@@ -100,22 +107,25 @@ save(strcat(dirlist_root,'\nl_struct.mat'),'nl_struct');
        
        raster_struct.iri = iri;
        raster_struct.iri_with_resp = iri(rw_lick_resp == 1);
-       figure;plot(1:numel(raster_struct.iri_with_resp),raster_struct.iri_with_resp/1000,'bx');
-       ylim([0 15]);
        
-       y = filtfilt(ones(1,1)/1,1,rw_lick_resp);
-       figure;plot(y)
-       ylim([0 1.2]);
-       title('Lick Response to cue');
-             
-       y1 = filtfilt(ones(5,1)/5,1,disp_resp);
-       figure;plot(y1)
-       ylim([0 1.2]);
-       title('Rewarded on Cue');
-       
-       c = raster_struct.laser_index;
-       d(c==0)=1;
-       figure;plot(cumsum(d));
+       if plotOutput
+           figure;plot(1:numel(raster_struct.iri_with_resp),raster_struct.iri_with_resp/1000,'bx');
+           ylim([0 15]);
+
+           y = filtfilt(ones(1,1)/1,1,rw_lick_resp);
+           figure;plot(y)
+           ylim([0 1.2]);
+           title('Lick Response to cue');
+
+           y1 = filtfilt(ones(5,1)/5,1,disp_resp);
+           figure;plot(y1)
+           ylim([0 1.2]);
+           title('Rewarded on Cue');
+
+           c = raster_struct.laser_index;
+           d(c==0)=1;
+           figure;plot(cumsum(d));
+       end
        
        ili = [nan;ili];
        k = 0;
