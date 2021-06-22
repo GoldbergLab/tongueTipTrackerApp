@@ -218,7 +218,12 @@ else
         [tip_guess_2, ~, candidate_coords_2, ~] = makeTipGuess(coords_b, ...
             centroid, init_vec_2, theta_max_2, dist_prctile_2) ;
 
-        projected_tip_coords = project_tip_guess_on_boundary(tip_guess_2, centroid, candidate_coords_2);
+        % If tip_guess_2 has NaN, we can't project it, so skip projection.
+        if any(isnan(tip_guess_2))
+            projected_tip_coords = nan(1, 3);
+        else
+            projected_tip_coords = project_tip_guess_on_boundary(tip_guess_2, centroid, candidate_coords_2);
+        end
 
         if illustrate
             scatter3(ax, candidate_coords_2(:, 1), candidate_coords_2(:, 2), candidate_coords_2(:, 3), ...
