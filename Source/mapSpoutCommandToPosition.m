@@ -113,6 +113,10 @@ for lickNum = 1:length(t_stats)
         t_stats(lickNum).spout_position_x = interpolatePosition(t_stats(lickNum).spout_position_x, spoutCalibration.speed);
         t_stats(lickNum).spout_position_y = interpolatePosition(t_stats(lickNum).spout_position_y, spoutCalibration.speed);
         t_stats(lickNum).spout_position_z = interpolatePosition(0*t_stats(lickNum).spout_position_z, spoutCalibration.speed);
+    else
+        t_stats(lickNum).spout_position_x = NaN;
+        t_stats(lickNum).spout_position_y = NaN;
+        t_stats(lickNum).spout_position_z = NaN;
     end
 end
 
