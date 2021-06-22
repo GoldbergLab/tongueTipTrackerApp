@@ -1,8 +1,7 @@
-function [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trial)
+function [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trial, spoutPositionCalibrations, motorSpeeds)
 % result is either true if the processing completed successfully or a cell array of char arrays describing the error.
 result = true;
 vid_ind_arr = [];
-
 for sessionNum = 1:numel(sessionVideoRoots)
     videoList = rdir(fullfile(sessionVideoRoots{sessionNum},'*.avi'));
     try
@@ -57,6 +56,10 @@ for sessionNum = 1:numel(sessionVideoRoots)
     t_stats = assign_CSM_SSM(t_stats);
     t_stats = lick_index_rel2contact(t_stats);
     t_stats = add_SSM_dur(t_stats);
+
+    %% Calculate spout position
+    t_stats = assign_actuator_commands(t_stats, l_sp_struct);
+    t_stats = mapSpoutCommandToPosition(t_stats, spoutPositionCalibrations{sessionNum});
     
     %% Save the Struct
     save(strcat(sessionMaskRoots{sessionNum},'\t_stats.mat'),'t_stats','l_sp_struct','vid_index');
