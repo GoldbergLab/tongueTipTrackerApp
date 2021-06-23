@@ -23,6 +23,7 @@ function t_stats = mapSpoutCommandToPosition(t_stats, spoutCalibration)
 %               ...
 %           .z(N)  = <z pixel coordinate for spout in Nth position>
 %           .speed = <speed of motor in pixels / ms in bottom mask>
+%           .latency = <latency from motor command to movement initiation in ms>
 %
 %   The following fields get added in this function:
 %           .cx(1) = <x command value for spout in initial position>
@@ -58,23 +59,23 @@ function t_stats = mapSpoutCommandToPosition(t_stats, spoutCalibration)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Build vector of all commands in t_stats file
-all_command_x = vertcat(t_stats.actuator_command_x);
-all_command_y = vertcat(t_stats.actuator_command_y);
+all_command_x = horzcat(t_stats.actuator_command_x);
+all_command_y = horzcat(t_stats.actuator_command_y);
 % There is no z motor currently, but we do need a z position, so we'll construct a vector of fake z commands.
 all_command_z = 0*all_command_y;
 % Remove NaN (NaN is placeholder for non-first-lick command vectors)
 all_command_x = all_command_x(~isnan(all_command_x));
 all_command_y = all_command_y(~isnan(all_command_x));
 all_command_z = all_command_z(~isnan(all_command_x));
-all_command = [all_command_x, all_command_y, all_command_z];
+all_command = [all_command_x; all_command_y; all_command_z];
 % Get unique command vectors, preserving order they were in during
 % session. This should ensure "home" position command is 1st, followed
 % by whichever target position command came first in the session, then
 % any subsequent target position commands in order.
-unique_actuator_commands = unique(all_command, 'row', 'stable');
-spoutCalibration.cx = unique_actuator_commands(:, 1);
-spoutCalibration.cy = unique_actuator_commands(:, 2);
-spoutCalibration.cz = unique_actuator_commands(:, 3);
+unique_actuator_commands = unique(all_command', 'row', 'stable')';
+spoutCalibration.cx = unique_actuator_commands(1, :);
+spoutCalibration.cy = unique_actuator_commands(2, :);
+spoutCalibration.cz = unique_actuator_commands(3, :);
 
 % Trim command and position vectors to same length
 numXCalPoints = min([length(spoutCalibration.cx), length(spoutCalibration.x)]);
@@ -110,9 +111,9 @@ for lickNum = 1:length(t_stats)
         t_stats(lickNum).spout_position_y = arrayfun(@spoutCalibration.y_map, t_stats(lickNum).actuator_command_y);
         t_stats(lickNum).spout_position_z = arrayfun(@spoutCalibration.z_map, 0*t_stats(lickNum).actuator_command_y);
         % Interpolate position where there are sudden jumps.
-        t_stats(lickNum).spout_position_x = interpolatePosition(t_stats(lickNum).spout_position_x, spoutCalibration.speed);
-        t_stats(lickNum).spout_position_y = interpolatePosition(t_stats(lickNum).spout_position_y, spoutCalibration.speed);
-        t_stats(lickNum).spout_position_z = interpolatePosition(0*t_stats(lickNum).spout_position_z, spoutCalibration.speed);
+        t_stats(lickNum).spout_position_x = inferPosition(t_stats(lickNum).spout_position_x, spoutCalibration.speed, spoutCalibration.latency);
+        t_stats(lickNum).spout_position_y = inferPosition(t_stats(lickNum).spout_position_y, spoutCalibration.speed, spoutCalibration.latency);
+        t_stats(lickNum).spout_position_z = inferPosition(t_stats(lickNum).spout_position_z, spoutCalibration.speed, spoutCalibration.latency);
     else
         t_stats(lickNum).spout_position_x = NaN;
         t_stats(lickNum).spout_position_y = NaN;
@@ -120,11 +121,14 @@ for lickNum = 1:length(t_stats)
     end
 end
 
-function position_interp = interpolatePosition(position, motorSpeed)
+function position_interp = inferPosition(position, motorSpeed, motorLatency)
 % position = a 1D vector of position values for the motor in units of Volts
 % motorSpeed = a speed in units of pixels / ms, indicating how fast the
 % motor can move.
 t = 1:length(position);
+% Shift position by motor latency
+position = [position(1) * ones([1, motorLatency]), position];
+position = position(1:length(t));
 position_interp = position;
 positionLength = length(position);
 changePoints = find(diff(position) ~= 0);
