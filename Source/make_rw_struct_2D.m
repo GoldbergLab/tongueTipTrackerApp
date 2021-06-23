@@ -16,8 +16,8 @@ for i = 1:numel(nl_struct)
         actuator1_ML = nl_struct(i).actuator1_ML;
         actuator2_AP = nl_struct(i).actuator2_AP;
         analog_lick = nl_struct(i).analog_lick;
-        actuator1_ML_command = nl_struct(i).actuator1_ML_command;
-        actuator2_AP_command = nl_struct(i).actuator2_AP_command;
+        actuator1_ML_command = nl_struct(i).actuator1_ML_command';
+        actuator2_AP_command = nl_struct(i).actuator2_AP_command';
 
         if first_time == 1
             ref_time = nl_struct(i).real_time;
