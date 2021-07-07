@@ -44,6 +44,8 @@ end
 % posthoc
 dist_table = table([l_sp_struct.actuator1_ML]', [l_sp_struct.actuator2_AP]');
 unique_dist = table2array(unique(dist_table, 'rows'));
+[~, ind] = sort(unique_dist(:, 1));
+unique_dist = unique_dist(ind, :);
 
 for i=1:numel(l_sp_struct)
     vid_trial = find(vid_index==i);

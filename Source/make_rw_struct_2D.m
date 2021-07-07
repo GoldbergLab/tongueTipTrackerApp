@@ -68,7 +68,7 @@ for i = 1:numel(nl_struct)
                         retrival_ilis = [retrival_ilis lick_ili(k)];
                         prev_licks_vect = [prev_licks_vect prev_lick_orig(k+1)];
                         k=k+1;
-                        if k == length(lick_ili)
+                        if k == length(lick_ili) + 1
                             break
                         end
                     end
