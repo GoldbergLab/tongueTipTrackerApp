@@ -16,14 +16,12 @@ videoSize = size(videoData);
 % for k = 1:videoSize(3)
 %     writeVideo(v, videoData(:, :, k));
 % end
-if isa(videoData, 'double') && max(videoData(:)) > 1
+if isa(videoData, 'double') && find(videoData > 1, 1)
     videoData = uint8(videoData);
 end
 if ndims(videoData) == 3
     videoSizeAdjusted = [videoSize(1:2), 1, videoSize(3)];
-else
-    videoSizeAdjusted = videoSize;
+    videoData = reshape(videoData, videoSizeAdjusted);
 end
-videoData = reshape(videoData, videoSizeAdjusted);
 writeVideo(v, videoData);
 close(v);
