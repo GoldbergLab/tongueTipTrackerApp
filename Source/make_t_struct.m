@@ -9,6 +9,9 @@ function [ t_stats_stack ] = make_t_struct(sessionDataRoots, dir_vid, save_flag,
 d = fdesign.lowpass('N,F3db',3, 50, 1000);
 lowpassFilter = design(d, 'butter');
 
+response_bin = {};
+laser_trial = [];
+
 for sessionNum = 1:numel(sessionDataRoots)
     dirlist_video = rdir(strcat(dir_vid{sessionNum},'\*.avi'));
 %   No longer used
@@ -16,8 +19,6 @@ for sessionNum = 1:numel(sessionDataRoots)
     load(fullfile(sessionDataRoots{sessionNum},'tip_track.mat'), 'tip_tracks');
     numTrials(sessionNum) = numel(dirlist_video); %size(out_xy_top,1);
     t_stats=[];
-    response_bin = {};
-    laser_trial = [];
     cue_onset = [];
     
     for videoNum = 1:numel(dirlist_video)
