@@ -6,10 +6,17 @@ for i=1:numel(t_stats)
     t_stats(i).analog_lick = nan;
 end
 
-trial_num_temp = unique([t_stats.trial_num]);
-for i=1:numel(trial_num_temp)
-    ind = find([t_stats.trial_num] == trial_num_temp(i));
-    t_stats(ind(1)).analog_lick = l_sp_struct(trial_num_temp(i)).analog_lick;
+% trial_num_temp = unique([t_stats.trial_num]);
+% for i=1:numel(trial_num_temp)
+%     ind = find([t_stats.trial_num] == trial_num_temp(i));
+%     t_stats(ind(1)).analog_lick = l_sp_struct(trial_num_temp(i)).analog_lick;
+% end
+
+for i=1:numel(vid_index)
+    if ~isnan(vid_index(i))
+        ind = find([t_stats.trial_num] == i);
+        t_stats(ind(1)).analog_lick = l_sp_struct(vid_index(i)).analog_lick;
+    end
 end
 
 % Old way from BSI - changed by BSI to new verison above

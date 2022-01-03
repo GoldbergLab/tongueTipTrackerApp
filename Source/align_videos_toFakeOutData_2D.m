@@ -58,7 +58,7 @@ for sessionNum = 1:numel(sessionVideoRoots)
     t_stats = add_SSM_dur(t_stats);
 
     %% Calculate spout position
-    t_stats = assign_actuator_commands(t_stats, l_sp_struct);
+    t_stats = assign_actuator_commands(t_stats, l_sp_struct, vid_index);
     t_stats = mapSpoutCommandToPosition(t_stats, spoutPositionCalibrations{sessionNum});
     
     %% Save the Struct
