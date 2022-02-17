@@ -2,6 +2,7 @@ function t_stats = assign_lick_type_2D(t_stats,l_sp_struct,vid_index)
 for i=1:numel(t_stats)
     t_stats(i).lick_type = 0;
     t_stats(i).spout_contact = nan;
+    t_stats(i).spout_contact2 = nan;
     t_stats(i).prev_spcontact = nan;
     t_stats(i).analog_lick = nan;
 end
@@ -39,6 +40,7 @@ for i=1:numel(l_sp_struct)
         ts_temp = t_stats(vid_licks_ind);
         
         loc = [];
+        loc2 = [];
         %             for jj = 1:numel(rw_licks)
         %                 tdiff = rw_licks(jj)-[ts_temp.time_rel_cue];
         %                 tdiff(tdiff<0) = 1000;
@@ -53,10 +55,21 @@ for i=1:numel(l_sp_struct)
             tdiff(tdiff<0) = 1000;
             tdiff(tdiff>ts_temp(jj).dur) = 1000;
             [~,loc_temp] = min(tdiff);
+            
+            % added by BSI to take care of 'double-tap' in 2D
+            loc_temp2 = find(tdiff<ts_temp(jj).dur);
+            
             if numel(loc_temp)>0 && tdiff(loc_temp) ~= 1000
                 loc(jj) = loc_temp(1);
             else
                 loc(jj) = nan;
+            end
+            
+            % added by BSI to take care of 'double-tap'
+            if sum(tdiff<ts_temp(jj).dur) > 1
+                loc2(jj) = loc_temp2(2);
+            else
+                loc2(jj) = nan;
             end
         end
         
@@ -77,6 +90,10 @@ for i=1:numel(l_sp_struct)
           if ~isnan(loc(jj))
             t_stats(vid_licks_ind(jj)).spout_contact = rw_licks(loc(jj));
             t_stats(vid_licks_ind(jj)).prev_spcontact = prev_spcontact(loc(jj));
+            % added by BSI to take care of 'double-tap'
+            if ~isnan(loc2(jj))
+                t_stats(vid_licks_ind(jj)).spout_contact2 = rw_licks(loc2(jj));
+            end
           end            
         end                                                                
         
