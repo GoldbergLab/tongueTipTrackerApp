@@ -56,6 +56,7 @@ for sessionNum = 1:numel(sessionVideoRoots)
     t_stats = assign_CSM_SSM(t_stats);
     t_stats = lick_index_rel2contact(t_stats);
     t_stats = add_SSM_dur(t_stats);
+    t_stats = assign_laser_2D(t_stats, sessionVideoRoots{sessionNum});
 
     %% Calculate spout position
     t_stats = assign_actuator_commands(t_stats, l_sp_struct, vid_index);

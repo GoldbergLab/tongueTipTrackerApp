@@ -14,6 +14,7 @@ end
 
 for i=1:numel(vid_index)
     if ~isnan(vid_index(i))
+        % disp(i)
         ind = find([t_stats.trial_num] == i);
         t_stats(ind(1)).analog_lick = l_sp_struct(vid_index(i)).analog_lick;
     end
