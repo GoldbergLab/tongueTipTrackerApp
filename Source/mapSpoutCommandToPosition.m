@@ -97,7 +97,6 @@ spoutCalibration.y_map = @lmy.predict;
 spoutCalibration.z_map = @lmz.predict;
 
 for lickNum = 1:length(t_stats)
-    lickNum
     command_x = t_stats(lickNum).actuator_command_x;
     command_y = t_stats(lickNum).actuator_command_y;
     command_z = 0*command_y;
