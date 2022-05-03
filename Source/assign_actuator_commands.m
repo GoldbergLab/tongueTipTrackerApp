@@ -9,7 +9,7 @@ for i=1:numel(t_stats)
     if isnan(vid_index(t_stats(i).trial_num))
         t_stats(i).actuator_command_x = NaN;
         t_stats(i).actuator_command_y = NaN;
-    elseif ~isnan(vid_index(t_stats(i).trial_num))
+    else
         if t_stats(i).lick_index == 1
             % This is the first lick - assign the whole trial actuator command
             %   vector to this lick.

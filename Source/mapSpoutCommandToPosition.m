@@ -64,10 +64,9 @@ all_command_y = horzcat(t_stats.actuator_command_y);
 % There is no z motor currently, but we do need a z position, so we'll construct a vector of fake z commands.
 all_command_z = 0*all_command_y;
 % Remove NaN (NaN is placeholder for non-first-lick command vectors)
-all_command_x = all_command_x(~isnan(all_command_x));
-all_command_y = all_command_y(~isnan(all_command_x));
-all_command_z = all_command_z(~isnan(all_command_x));
 all_command = [all_command_x; all_command_y; all_command_z];
+notNans = ~isnan(all_command_x);
+all_command = all_command(:, notNans);
 % Get unique command vectors, preserving order they were in during
 % session. This should ensure "home" position command is 1st, followed
 % by whichever target position command came first in the session, then
@@ -98,6 +97,7 @@ spoutCalibration.y_map = @lmy.predict;
 spoutCalibration.z_map = @lmz.predict;
 
 for lickNum = 1:length(t_stats)
+    lickNum
     command_x = t_stats(lickNum).actuator_command_x;
     command_y = t_stats(lickNum).actuator_command_y;
     command_z = 0*command_y;
@@ -107,9 +107,9 @@ for lickNum = 1:length(t_stats)
         
         % Map command to position (note: there is no z command, so we're
         % making a fake one to match our calibration.
-        t_stats(lickNum).spout_position_x = arrayfun(@spoutCalibration.x_map, t_stats(lickNum).actuator_command_x);
-        t_stats(lickNum).spout_position_y = arrayfun(@spoutCalibration.y_map, t_stats(lickNum).actuator_command_y);
-        t_stats(lickNum).spout_position_z = arrayfun(@spoutCalibration.z_map, 0*t_stats(lickNum).actuator_command_y);
+        t_stats(lickNum).spout_position_x = spoutCalibration.x_map(t_stats(lickNum).actuator_command_x')';
+        t_stats(lickNum).spout_position_y = spoutCalibration.y_map(t_stats(lickNum).actuator_command_y')';
+        t_stats(lickNum).spout_position_z = spoutCalibration.z_map(0*t_stats(lickNum).actuator_command_y')';
         % Interpolate position where there are sudden jumps.
         t_stats(lickNum).spout_position_x = inferPosition(t_stats(lickNum).spout_position_x, spoutCalibration.speed, spoutCalibration.latency);
         t_stats(lickNum).spout_position_y = inferPosition(t_stats(lickNum).spout_position_y, spoutCalibration.speed, spoutCalibration.latency);
