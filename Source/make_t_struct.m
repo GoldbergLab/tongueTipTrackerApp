@@ -217,8 +217,11 @@ for sessionNum = 1:numel(sessionDataRoots)
 
                     prot_ind = locs_asmin(1);
                     ret_ind = locs_asmin(end);
-                catch
+                catch ME
+                    disp(getReport(ME));
+                    fprintf('Video #%d: Skipping rest of trial - no volume minima found in lick #%d\n', videoNum, lickNum);
                     flag=1;
+                    break;
                 end
                 %Package the trial information/metadata
                 l_traj(mm).time_rel_cue = onsetOffsetPairs(lickNum,1)-cue_onset(videoNum);
