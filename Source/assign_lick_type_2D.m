@@ -36,7 +36,7 @@ for i=1:numel(l_sp_struct)
         vid_licks_ind = find([t_stats.trial_num] == vid_trial);
         %t_stats(vid_licks_ind).lick_type = zeros(1,numel(vid_licks_ind));
         
-        ts_temp = t_stats(vid_licks_ind);
+        t_stats_temp = t_stats(vid_licks_ind);
         
         loc = [];
         loc2 = [];
@@ -49,55 +49,55 @@ for i=1:numel(l_sp_struct)
         %                 end
         %             end
         
-        for jj = 1:numel(ts_temp)            
-            tdiff = rw_licks - ts_temp(jj).time_rel_cue;
+        for lickNum = 1:numel(t_stats_temp)
+            tdiff = rw_licks - t_stats_temp(lickNum).time_rel_cue;
             tdiff(tdiff<0) = 1000;
-            tdiff(tdiff>ts_temp(jj).dur) = 1000;
+            tdiff(tdiff>t_stats_temp(lickNum).dur) = 1000;
             [~,loc_temp] = min(tdiff);
             
             % added by BSI to take care of 'double-tap' in 2D
-            loc_temp2 = find(tdiff<ts_temp(jj).dur);
+            loc_temp2 = find(tdiff<t_stats_temp(lickNum).dur);
             
             if numel(loc_temp)>0 && tdiff(loc_temp) ~= 1000
-                loc(jj) = loc_temp(1);
+                loc(lickNum) = loc_temp(1);
             else
-                loc(jj) = nan;
+                loc(lickNum) = nan;
             end
             
             % added by BSI to take care of 'double-tap'
-            if sum(tdiff<ts_temp(jj).dur) > 1
-                loc2(jj) = loc_temp2(2);
+            if sum(tdiff<t_stats_temp(lickNum).dur) > 1
+                loc2(lickNum) = loc_temp2(2);
             else
-                loc2(jj) = nan;
+                loc2(lickNum) = nan;
             end
         end
         
         flag = 1;
         lick_count = 1;
-        for jj = 1:numel(ts_temp)
-            if (flag == 1) && (~isnan(loc(jj)))
-                t_stats(vid_licks_ind(jj)).lick_type = 1;
+        for lickNum = 1:numel(t_stats_temp)
+            if (flag == 1) && (~isnan(loc(lickNum)))
+                t_stats(vid_licks_ind(lickNum)).lick_type = 1;
                 lick_count = lick_count + 1;
                 flag = 2;
             elseif flag == 2
-                t_stats(vid_licks_ind(jj)).lick_type = lick_count;
+                t_stats(vid_licks_ind(lickNum)).lick_type = lick_count;
                 lick_count = lick_count + 1;
             end
         end
         
-        for jj = 1:numel(ts_temp)
-          if ~isnan(loc(jj))
-            t_stats(vid_licks_ind(jj)).spout_contact = rw_licks(loc(jj));
-            t_stats(vid_licks_ind(jj)).prev_spcontact = prev_spcontact(loc(jj));
+        for lickNum = 1:numel(t_stats_temp)
+          if ~isnan(loc(lickNum))
+            t_stats(vid_licks_ind(lickNum)).spout_contact = rw_licks(loc(lickNum));
+            t_stats(vid_licks_ind(lickNum)).prev_spcontact = prev_spcontact(loc(lickNum));
             % added by BSI to take care of 'double-tap'
-            if ~isnan(loc2(jj))
-                t_stats(vid_licks_ind(jj)).spout_contact2 = rw_licks(loc2(jj));
+            if ~isnan(loc2(lickNum))
+                t_stats(vid_licks_ind(lickNum)).spout_contact2 = rw_licks(loc2(lickNum));
             end
           end            
         end                                                                
         
         spcontact_vect = find(~isnan([t_stats(vid_licks_ind).prev_spcontact]));
-        for kk = 1:numel(ts_temp)
+        for kk = 1:numel(t_stats_temp)
             if isnan(t_stats(vid_licks_ind(kk)).prev_spcontact)
                 [~,I] = min(abs(spcontact_vect-kk));
                 if numel(I)

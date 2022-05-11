@@ -220,6 +220,8 @@ for sessionNum = 1:numel(sessionDataRoots)
                 catch ME
                     disp(getReport(ME));
                     fprintf('Video #%d: Skipping rest of trial - no volume minima found in lick #%d\n', videoNum, lickNum);
+                    % Delete current incomplete lick row:
+                    l_traj(mm) = [];
                     flag=1;
                     break;
                 end
