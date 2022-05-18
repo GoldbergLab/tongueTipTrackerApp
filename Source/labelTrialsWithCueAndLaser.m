@@ -120,7 +120,7 @@ if any(laserFrames < 0)
     laserFrames(laserFrames < 0) = [];
 end
 if length(laserFrames) == 1
-    send(queue, sprintf('Warning, file %s has only one single frame of post-cue laser-on pulse! This file will be marked as non-laser.', [name, ext]));s
+    send(queue, sprintf('Warning, file %s has only one single frame of post-cue laser-on pulse! This file will be marked as non-laser.', [name, ext]));
     laserFrames = [];
 end
 if any(diff(laserFrames) ~= 1)
