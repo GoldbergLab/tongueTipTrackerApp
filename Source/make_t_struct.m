@@ -12,7 +12,7 @@ function [ t_stats_stack ] = make_t_struct(sessionDataRoots, dir_vid, save_flag,
 %   trim: trim tip track down to a single point
 %   fill: fill in invalid values in tip track with the single valid value
 %   ignore: leave NaN values in the tip track
-singletonTongueTrackBehavior = 'trim'; 
+singletonTongueTrackBehavior = 'ignore'; 
 
 d = fdesign.lowpass('N,F3db',3, 50, 1000);
 lowpassFilter = design(d, 'butter');
