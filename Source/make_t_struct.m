@@ -160,6 +160,7 @@ for sessionNum = 1:numel(sessionDataRoots)
                             tip_z = tip_z(notNaNMask);
                         case 'fill'
                             % Fill whole tip track with single valid value
+                            notNaNMask = ~isnan(tip_x);
                             if numValidTipPositions == 0
                                 error('Cannot fill tongue tip values because there are zero valid values. Change behavior to trim instead?');
                             end
