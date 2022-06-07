@@ -115,7 +115,7 @@ laserFrames = cellfun(@(f)str2double(f{1}), laserFrameTokens);
 % Alert user to potential abnormalities in laser on signal, and attempt to
 % compensate for them.
 [~, name, ext] = fileparts(xmlFilepath);
-if any(laserFrames < 0)
+if any(laserFrames < 1)
     send(queue, sprintf('Warning, file %s has laser-on pulses before the cue frame! Ignoring laser signal before cue frame...', [name, ext]));
     laserFrames(laserFrames < 0) = [];
 end
