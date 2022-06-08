@@ -117,7 +117,7 @@ laserFrames = cellfun(@(f)str2double(f{1}), laserFrameTokens);
 [~, name, ext] = fileparts(xmlFilepath);
 if any(laserFrames < 1)
     send(queue, sprintf('Warning, file %s has laser-on pulses before the cue frame! Ignoring laser signal before cue frame...', [name, ext]));
-    laserFrames(laserFrames < 0) = [];
+    laserFrames(laserFrames < 1) = [];
 end
 if length(laserFrames) == 1
     send(queue, sprintf('Warning, file %s has only one single frame of post-cue laser-on pulse! This file will be marked as non-laser.', [name, ext]));
@@ -130,6 +130,8 @@ end
 % Check for and eliminate single-frame pulses
 laserMask = false(1, max(laserFrames));
 laserMask(laserFrames) = true;
+
+% Determine if there are any single-frame isolated laser signals
 laserNeighbors = conv(laserMask, [1, 1, 1], 'same');
 laserNeighbors = laserNeighbors(laserMask);
 if any(laserNeighbors < 2)
