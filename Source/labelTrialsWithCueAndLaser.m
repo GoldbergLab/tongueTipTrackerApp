@@ -105,42 +105,13 @@ end
 % Read XML file as text
 text = fileread(xmlFilepath);
 % Find tag that indicates which frame is cue frame
-tokens = regexp(text, '<FirstImageNo>-([0-9]+)</FirstImageNo>', 'tokens');
+cueFrameTokens = regexp(text, '<FirstImageNo>-([0-9]+)</FirstImageNo>', 'tokens');
 % Parse cue frame from tag text
-cueFrame = str2double(tokens{1}{1}) + 1;
+cueFrame = str2double(cueFrameTokens{1}{1}) + 1;
 % Find list of laser on frame numbers
-laserFrameTokens = regexp(text, '<Time frame=\"(-?[0-9])+\">[0-9\.\ \:]+ E</Time>', 'tokens');
-laserFrames = cellfun(@(f)str2double(f{1}), laserFrameTokens);
+laserFrames = findLaserFrames([], text, true, queue);
 
-% Alert user to potential abnormalities in laser on signal, and attempt to
-% compensate for them.
-[~, name, ext] = fileparts(xmlFilepath);
-if any(laserFrames < 1)
-    send(queue, sprintf('Warning, file %s has laser-on pulses before the cue frame! Ignoring laser signal before cue frame...', [name, ext]));
-    laserFrames(laserFrames < 1) = [];
-end
-if length(laserFrames) == 1
-    send(queue, sprintf('Warning, file %s has only one single frame of post-cue laser-on pulse! This file will be marked as non-laser.', [name, ext]));
-    laserFrames = [];
-end
-if any(diff(laserFrames) ~= 1)
-    send(queue, sprintf('Warning, file %s has multiple laser-on pulses!', [name, ext]));
-end
-
-% Check for and eliminate single-frame pulses
-laserMask = false(1, max(laserFrames));
-laserMask(laserFrames) = true;
-
-% Determine if there are any single-frame isolated laser signals
-laserNeighbors = conv(laserMask, [1, 1, 1], 'same');
-laserNeighbors = laserNeighbors(laserMask);
-if any(laserNeighbors < 2)
-    % There are isolated single-frame laser pulses...
-    send(queue, sprintf('Warning, file %s has single-frame laser-on pulses! Eliminating them...', [name, ext]));
-    laserFrames(laserNeighbors < 2) = [];
-end
-
-% Determine if 
+% Determine if this file contains laser or not
 if length(laserFrames) > 1
     isLaser = true;
 else

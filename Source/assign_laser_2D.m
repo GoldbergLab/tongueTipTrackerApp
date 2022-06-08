@@ -9,7 +9,9 @@ for i = 1:max([t_stats.trial_num])
     time_rel_cue = [t_stats([t_stats.trial_num] == i).time_rel_cue];
     % calculate lick indeces relative to 1st spout contact
     if sum(laser) > 0
-        [laserOn, laserOff] = findLaserOnLaserOff(xml_file(i).name);
+        laserFrames = findLaserFrames(xml_file(i).name, [], true);
+        [laserOn, laserOff] = findOnsetOffsetPairs([], laserFrames, true);
+%        [laserOn, laserOff] = findLaserOnLaserOff(xml_file(i).name);
         laser_2D_temp = time_rel_cue > laserOn & time_rel_cue < laserOff;
         laser_2D([t_stats.trial_num] == i) = laser_2D_temp;
     else
