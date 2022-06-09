@@ -350,9 +350,12 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             isBlank = isempty(tdiff(tableRow, app.newSessionRow));
         end
         
-        function [valid, reasons, fixed, newDataTable] = validateDataTable(app, newDataTable, attemptFix)
+        function [valid, reasons, fixed, newDataTable] = validateDataTable(app, newDataTable, attemptFix, offerPathSwap)
             if ~exist('attemptFix', 'var') || isempty(attemptFix)
                 attemptFix = false;
+            end
+            if ~exist('offerPathSwap', 'var') || isempty(offerPathSwap)
+                offerPathSwap = false;
             end
             valid = true;
             fixed = false;
@@ -484,6 +487,18 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
 %                 valid = false;
 %                 reasons = [reasons, 'Box Y''s must be smaller than corresponding Y1''s'];
 %             end
+            if offerPathSwap
+                % Give user opportunity to swap drive letter if paths are
+                % not valid
+                numMD = length(newDataTable.SessionMaskDirs);
+                numVD = length(newDataTable.SessionVideoDirs);
+                numFD = length(newDataTable.SessionFPGADirs);
+                allDirs = [newDataTable.SessionMaskDirs; newDataTable.SessionVideoDirs; newDataTable.SessionFPGADirs];
+                allDirs = validatePaths(allDirs, true, true);
+                newDataTable.SessionMaskDirs = allDirs(1:numMD);
+                newDataTable.SessionVideoDirs = allDirs((numMD+1):(numMD+numVD));
+                newDataTable.SessionFPGADirs = allDirs((numMD+numVD+1):(numMD+numVD+numFD));
+            end
             for k = 1:height(newDataTable)
                 if app.isTableRowBlank(newDataTable(k, :))
                     % kth row is just a  blank row. Ignore it.
@@ -1666,7 +1681,7 @@ end
                 filepath = fullfile(path, name);
                 loadedVars = load(filepath);
 %                dataTable = app.newSessionRow;
-                [valid, reasons, fixed, loadedVars.dataTable] = app.validateDataTable(loadedVars.dataTable, true);
+                [valid, reasons, fixed, loadedVars.dataTable] = app.validateDataTable(loadedVars.dataTable, true, true);
                 for variableNum = 1:width(loadedVars.dataTable)
                     variable = loadedVars.dataTable.Properties.VariableNames{variableNum};
                     if any(strcmp(variable, app.newSessionRow.Properties.VariableNames))
@@ -2057,7 +2072,7 @@ helpMsg = {...
                 filepath = fullfile(path, name);
                 loadedVars = load(filepath);
 %                dataTable = app.newSessionRow;
-                [valid, reasons, fixed, loadedVars.dataTable] = app.validateDataTable(loadedVars.dataTable, true);
+                [valid, reasons, fixed, loadedVars.dataTable] = app.validateDataTable(loadedVars.dataTable, true, true);
                 for variableNum = 1:width(loadedVars.dataTable)
                     variable = loadedVars.dataTable.Properties.VariableNames{variableNum};
                     if any(strcmp(variable, app.newSessionRow.Properties.VariableNames))
