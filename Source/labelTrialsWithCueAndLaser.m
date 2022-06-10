@@ -16,6 +16,8 @@ function labelTrialsWithCueAndLaser(varargin)
 % queue (optional, default=dummy queue that displays using disp) a message 
 %   queue for sending stdout messages to parent process, for 
 %   parallelization purposes.
+% verbose (optional, default=false) display extra debug output
+% relabel (optional, default=true) relabel already-labeled files.
 
 p = inputParser;
 addRequired(p, 'xmlDirectory');
@@ -24,6 +26,7 @@ addRequired(p, 'trialExtensions');
 addOptional(p, 'dryRun', false);
 addOptional(p, 'queue', []);
 addParameter(p, 'verbose', false);
+addParameter(p, 'relabel', true);
 parse(p, varargin{:});
 xmlDirectory = p.Results.xmlDirectory;
 trialDirectory = p.Results.trialDirectory;
@@ -31,6 +34,7 @@ trialExtensions = p.Results.trialExtensions;
 dryRun = p.Results.dryRun;
 queue = p.Results.queue;
 verbose = p.Results.verbose;
+relabel = p.Results.relabel;
 % disp(p.Results)
 % If no queue given, create a dummy queue
 if isempty(queue)
@@ -76,7 +80,21 @@ for k = 1:length(xmlFilepaths)
         
         alreadyDidItStartIndex = regexp(name, '_C[0-9]+L?');
         if alreadyDidItStartIndex
-            name = name(1:alreadyDidItStartIndex-1);
+            % This video has already been labeled with cue and laser
+            if relabel
+                % USer wants to relabel already-labeled videos
+                if verbose
+                    send(queue, ['Relabeling already-labeled file: ', filepath]);
+                end
+                name = name(1:alreadyDidItStartIndex-1);
+            else
+                % User does not want to relabel already-labeled videos, so
+                % skip this one.
+                if verbose
+                    send(queue, ['Skipping already-labeled file: ', filepath]);
+                end
+                continue;
+            end
         end
         if isLaser
             laserTag = 'L';

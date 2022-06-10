@@ -39,7 +39,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         OpenselecteddirectoryButton     matlab.ui.control.Button
         BGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
         BLabelvideoswcuelaserButton     matlab.ui.control.Button
-        DryrunlabelingCheckBox          matlab.ui.control.CheckBox
+        DryrunCheckBox                  matlab.ui.control.CheckBox
         reloadVideoBrowser              matlab.ui.control.Button
         CAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
         ACombineconvertFPGAdatfilesButton  matlab.ui.control.Button
@@ -63,6 +63,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         SpoutWidthLabel                 matlab.ui.control.Label
         AddDataTableButton              matlab.ui.control.Button
         DeleteSessionButton             matlab.ui.control.Button
+        RelabelCheckBox                 matlab.ui.control.CheckBox
     end
 
 
@@ -487,6 +488,15 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
 %                 valid = false;
 %                 reasons = [reasons, 'Box Y''s must be smaller than corresponding Y1''s'];
 %             end
+            if ~any(strcmp('SessionFPGADirs', newDataTable.Properties.VariableNames))
+                valid = false;
+                fixed = false;
+                reasons = [reasons, 'SessionFPGADirs field missing'];
+                if attemptFix
+                    newDataTable.SessionFPGADirs = repmat({''}, height(newDataTable), 1);
+                    fixed = true;
+                end
+            end
             if offerPathSwap
                 % Give user opportunity to swap drive letter if paths are
                 % not valid
@@ -1751,14 +1761,15 @@ end
 
         % Button pushed function: BLabelvideoswcuelaserButton
         function BLabelvideoswcuelaserButtonPushed(app, event)
-            dryrun = app.DryrunlabelingCheckBox.Value;
+            dryrun = app.DryrunCheckBox.Value;
             queue = parallel.pool.DataQueue();
             afterEach(queue, @app.print);
             dataTable = app.getDataTable();
             app.print('Labeling avi files with cue and laser...')
+            relabel = app.RelabelCheckBox.Value;
             parfor k = 1:numel(dataTable.SessionVideoDirs)
                 sessionVideoDir = dataTable.SessionVideoDirs{k};
-                labelTrialsWithCueAndLaser(sessionVideoDir, sessionVideoDir, '.avi', dryrun, queue)
+                labelTrialsWithCueAndLaser(sessionVideoDir, sessionVideoDir, '.avi', dryrun, queue, 'relabel', relabel);
             end
             app.print('...done labeling avi files with cue and laser')            
         end
@@ -2352,10 +2363,10 @@ helpMsg = {...
             app.BLabelvideoswcuelaserButton.Position = [478 533 101 39];
             app.BLabelvideoswcuelaserButton.Text = {'B. Label videos '; 'w/ cue & laser'};
 
-            % Create DryrunlabelingCheckBox
-            app.DryrunlabelingCheckBox = uicheckbox(app.UIFigure);
-            app.DryrunlabelingCheckBox.Text = {'Dry run'; 'labeling'};
-            app.DryrunlabelingCheckBox.Position = [588 533 74 39];
+            % Create DryrunCheckBox
+            app.DryrunCheckBox = uicheckbox(app.UIFigure);
+            app.DryrunCheckBox.Text = 'Dry run';
+            app.DryrunCheckBox.Position = [588 554 74 18];
 
             % Create reloadVideoBrowser
             app.reloadVideoBrowser = uibutton(app.UIFigure, 'push');
@@ -2504,6 +2515,12 @@ helpMsg = {...
             app.DeleteSessionButton.ButtonPushedFcn = createCallbackFcn(app, @DeleteSessionButtonPushed, true);
             app.DeleteSessionButton.Position = [648 217 59 36];
             app.DeleteSessionButton.Text = {'Delete'; 'Session'};
+
+            % Create RelabelCheckBox
+            app.RelabelCheckBox = uicheckbox(app.UIFigure);
+            app.RelabelCheckBox.Tooltip = {'Relabel already-labeled videos?'};
+            app.RelabelCheckBox.Text = 'Relabel';
+            app.RelabelCheckBox.Position = [588 531 74 22];
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
