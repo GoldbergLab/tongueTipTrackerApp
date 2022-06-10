@@ -3,9 +3,30 @@ function [seginfo,redir_pts,rad_curv] = get_t_kinsegments(l_traj)
 seginfo =[];
 speed = l_traj.magspeed_t;
 
-x_plt = l_traj.tip_x - l_traj.tip_x(1);
-y_plt = l_traj.tip_y - l_traj.tip_y(1);
-z_plt = l_traj.tip_z - l_traj.tip_z(1);
+% Find first non-nan value, use as origin
+x0 = l_traj.tip_x(find(~isnan(l_traj.tip_x), 1));
+y0 = l_traj.tip_y(find(~isnan(l_traj.tip_y), 1));
+z0 = l_traj.tip_z(find(~isnan(l_traj.tip_z), 1));
+
+% in case of all NaN, keep l_traj.tip as is
+if isempty(x0)
+    x_plt = l_traj.tip_x;
+else
+    x_plt = l_traj.tip_x - x0;
+end
+
+if isempty(y0)
+    y_plt = l_traj.tip_y;
+else
+    y_plt = l_traj.tip_y - y0;
+end
+
+if isempty(z0)
+    z_plt = l_traj.tip_z;
+else
+    z_plt = l_traj.tip_z - z0;
+end
+
 
 if length(x_plt) >= 3
     pos_vect = [x_plt',y_plt',z_plt'];

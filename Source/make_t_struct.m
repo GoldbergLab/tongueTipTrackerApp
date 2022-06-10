@@ -145,6 +145,8 @@ for sessionNum = 1:numel(sessionDataRoots)
                     tip_y(vect_interp) = interp1(ix(~vect_interp),tip_y(~vect_interp),ix(vect_interp),'linear','extrap');
                     tip_z(vect_interp) = interp1(ix(~vect_interp),tip_z(~vect_interp),ix(vect_interp),'linear','extrap');
 
+                    % Filter/scale tip traces - note that this transposes
+                    % the vector!!
                     tip_x = filter_and_scale(tip_x,lowpassFilter);
                     tip_y = filter_and_scale(tip_y,lowpassFilter);
                     tip_z = filter_and_scale(tip_z,lowpassFilter);
@@ -155,20 +157,25 @@ for sessionNum = 1:numel(sessionDataRoots)
                         case 'trim'
                             % Trim tip to single point
                             notNaNMask = ~isnan(tip_x);
-                            tip_x = tip_x(notNaNMask);
-                            tip_y = tip_y(notNaNMask);
-                            tip_z = tip_z(notNaNMask);
+                            tip_x = tip_x(notNaNMask)';
+                            tip_y = tip_y(notNaNMask)';
+                            tip_z = tip_z(notNaNMask)';
                         case 'fill'
                             % Fill whole tip track with single valid value
                             notNaNMask = ~isnan(tip_x);
                             if numValidTipPositions == 0
                                 error('Cannot fill tongue tip values because there are zero valid values. Change behavior to trim instead?');
                             end
-                            tip_x = ones(size(tip_x)) * tip_x(notNaNMask);
-                            tip_y = ones(size(tip_y)) * tip_y(notNaNMask);
-                            tip_z = ones(size(tip_z)) * tip_z(notNaNMask);
+                            tip_x = ones(size(tip_x')) * tip_x(notNaNMask);
+                            tip_y = ones(size(tip_y')) * tip_y(notNaNMask);
+                            tip_z = ones(size(tip_z')) * tip_z(notNaNMask);
                         case 'ignore'
                             % Just leave the NaNs in
+                            % Gotta transpose the vectors because we're not
+                            % running filter_and_scale
+                            tip_x = tip_x';
+                            tip_y = tip_y';
+                            tip_z = tip_z';
                     end
                 end
 
