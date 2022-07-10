@@ -3,6 +3,8 @@ for i=1:numel(t_stats)
     t_stats(i).lick_type = 0;
     t_stats(i).spout_contact = nan;
     t_stats(i).spout_contact2 = nan;
+    t_stats(i).spout_contact_offset = nan;
+    t_stats(i).spout_contact_offset2 = nan;
     t_stats(i).prev_spcontact = nan;
     t_stats(i).analog_lick = nan;
 end
@@ -30,6 +32,7 @@ end
 for i=1:numel(l_sp_struct)
     vid_trial = find(vid_index==i);
     rw_licks = l_sp_struct(i).rw_licks;
+    rw_licks_offset = l_sp_struct(i).rw_licks_offset;
     prev_spcontact = l_sp_struct(i).prev_licks;
     
     if numel(vid_trial) && numel(rw_licks)
@@ -50,6 +53,7 @@ for i=1:numel(l_sp_struct)
         %             end
         
         for lickNum = 1:numel(t_stats_temp)
+            % this is a weird way to get an index...but ok, Teja.
             tdiff = rw_licks - t_stats_temp(lickNum).time_rel_cue;
             tdiff(tdiff<0) = 1000;
             tdiff(tdiff>t_stats_temp(lickNum).dur) = 1000;
@@ -87,11 +91,23 @@ for i=1:numel(l_sp_struct)
         
         for lickNum = 1:numel(t_stats_temp)
           if ~isnan(loc(lickNum))
+              
             t_stats(vid_licks_ind(lickNum)).spout_contact = rw_licks(loc(lickNum));
             t_stats(vid_licks_ind(lickNum)).prev_spcontact = prev_spcontact(loc(lickNum));
+            if loc(lickNum) <= numel(rw_licks_offset)
+                t_stats(vid_licks_ind(lickNum)).spout_contact_offset = rw_licks_offset(loc(lickNum));
+            elseif loc(lickNum) > numel(rw_licks_offset)
+                t_stats(vid_licks_ind(lickNum)).spout_contact_offset = nan;
+            end
+
             % added by BSI to take care of 'double-tap'
             if ~isnan(loc2(lickNum))
                 t_stats(vid_licks_ind(lickNum)).spout_contact2 = rw_licks(loc2(lickNum));
+                if lickNum <= numel(rw_licks_offset)
+                    t_stats(vid_licks_ind(lickNum)).spout_contact_offset2 = rw_licks_offset(loc2(lickNum));
+                elseif lickNum > numel(rw_licks_offset)
+                    t_stats(vid_licks_ind(lickNum)).spout_contact_offset2 = nan;
+                end
             end
           end            
         end                                                                
