@@ -1,43 +1,34 @@
-function [xH, yH] = healGap(x, y, gapStartIdx, numPoints)
-% Approximate healing of gap in sequence of points
+function yH = healGap(x, y, xq)
+% Approximate healing of gap in sequence of ordered points
 
+[x, y, xq] = sanitizeXY(x, y, xq);
 
-if any(diff(x) < 0)
+yH = pchip(x, y, xq);
+
+function [x, y, xq] = sanitizeXY(x, y, xq)
+% If points seem to be ordered in reverse-x order, flip them
+if mean(diff(x)) < 0
     % Ordering must be reversed
-    flipX = true;
     x = flip(x);
     y = flip(y);
-else
-    flipX = false;
+    xq = flip(xq);
 end
 
-totalDY = y(end) - y(1);
-totalDX = x(end) - x(1);
-angle = atan(totalDY/totalDX);
-if totalDX < 0
-    angle = angle + pi;
+% Force x to be monotonic increasing (still could stay the same)
+x = cummax(x);
+
+% Find starts and ends of stretches of repeated x-coordinates
+repeatStarts = find(diff(diff([NaN; x; NaN]) == 0)>0);
+repeatEnds = find(diff(diff([NaN; x; NaN]) == 0)<0);
+
+for k = 1:length(repeatStarts)
+    % Identify start and end of set of repeated X values
+    repStart = repeatStarts(k);
+    repEnd = repeatEnds(k);
+    repVal = x(repStart);
+    nReps = repEnd - repStart + 1;
+    % Generate new slightly spread out x-values to de-duplicate them
+    newX = linspace(repVal-0.9, repVal+0.9, nReps+2);
+    newX = newX(2:end-1);
+    x(repStart:repEnd) = newX;
 end
-
-[xr, yr] = rotatePoints(x, y, angle);
-%[angle, xr, yr] = findFunctionalRotation(x, y);
-if flipX
-    xr = flip(xr);
-    yr = flip(yr);
-end
-
-xH = linspace(x(gapStartIdx), x(gapStartIdx+1), numPoints+2)';
-xH = xH(2:end-1);
-
-xqr = linspace(xr(gapStartIdx), xr(gapStartIdx+1), numPoints+2)';
-xqr = xqr(2:end-1);
-
-% Fit pchip to rotated points
-try
-    yHr = pchip(xr, yr, xqr);
-catch
-    disp('oops');
-end
-
-% Unrotate interpolated points
-r = exp(angle*1i) .* (xqr + yHr*1i);
-yH = imag(r);
