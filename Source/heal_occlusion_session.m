@@ -7,17 +7,6 @@ end
 
 spout_width = 10;
 
-% imbot = logical(imread('occlusion_bot.png'));
-% imtop = logical(imread('occlusion_top.png'));
-% spoutbot = false(size(imbot));
-% spouttop = false(size(imtop));
-
-% trial_num = 27;
-% sessionMaskRoot = 'W:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms';
-% sessionVideoRoot = 'W:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Video\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms';
-% sessionFPGARoot = 'W:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Data\Box_1_211117_ALM_TJS1_6_fakeout2D_ALM_L2_300ms\111721_3000_04_';
-% time_aligned_trial = [1, 1];
-
 %% Get Times of all the videos
 vid_real_time = getTongueVideoTimestamps(sessionVideoRoot);
 
@@ -30,8 +19,8 @@ vid_index = mapVideoIndexToFPGATrialIndex(vid_real_time, lick_struct, time_align
 
 %load(strcat(sessionMaskRoot,'\t_stats.mat'),'t_stats')
 %l_sp_struct = lick_struct;
-
-for trial_num = 1:2 %length(vid_index)
+trial_nums = 1:length(vid_index);
+for trial_num = trial_nums
     if isnan(trial_num)
         % No lick_struct row corresponding to this video
         continue;
@@ -67,9 +56,9 @@ for trial_num = 1:2 %length(vid_index)
     % Generate the bounding box of the spout for each frame in this trial
     spout_bbox = getSpoutBBox(lick_struct(vid_index(trial_num)), spout_calibration, spout_width, mask_size);
 
-    display_frames = round(linspace(1, size(tongue_top_masks, 1), 15));
+    display_frames = randsample(1300, 25);
     [top_healed_masks, bot_healed_masks, top_report_data, bot_report_data] = heal_occlusion_trial(tongue_top_masks, tongue_bot_masks, spout_bbox, cue_frame, display_frames);
-    
+
     debug_mode = false;
     if debug_mode
         % FOR DEBUGGING PURPOSES
@@ -91,8 +80,6 @@ for trial_num = 1:2 %length(vid_index)
 end
 profile off;
 profile viewer;
-disp('hi');
-
 
 function saveOcclusionResults(report_data, healed_masks, save_dir, occlusions_dir, view, heal_timestamp, original_mask_path, trial_num)
 % report_data =         struct containing occlusion report for each frame
@@ -121,13 +108,14 @@ report.moved_mask_path = moved_mask_path;
 report.trial_num = trial_num;
 report.data = report_data;
 healed_name = sprintf('%s_%03d.mat', view, trial_num-1);
-report_name = sprintf('%s_%03d_occ-report-%04d.mat', view, trial_num-1, length(report_data));
+num_patched = sum([report_data.patch_size] > 0);
+report_name = sprintf('%s_%03d_occ-report-%04d.mat', view, trial_num-1, num_patched);
 
 % Copy original mask stack to occlusions folder in case we want to revert.
 copyfile(original_mask_path, moved_mask_path);
 
 % Save occlusion report
-save(fullfile(save_dir, report_name), 'report');
+save(fullfile(occlusions_dir, report_name), 'report');
 
 % Save healed masks
 mask_pred = healed_masks;  % Legacy naming scheme which code depends on

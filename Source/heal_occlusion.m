@@ -1,4 +1,4 @@
-function [healed_mask, patch_size, spout_close] = heal_occlusion(tongue_mask, spout_mask, max_spout_gap, debug, plot_title)
+function [healed_mask, patch_size, tongue_size, spout_close] = heal_occlusion(tongue_mask, spout_mask, max_spout_gap, debug, plot_title)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % heal_occlusion: Heal a spout occlusion in a 2D tongue mask
 % usage:  healed_mask = heal_occlusion(tongue_mask, spout_mask, 
@@ -40,11 +40,12 @@ verbose = false;
 original_mask_size = size(tongue_mask);
 
 % Crop tongue mask for speed
-[~, xlimits, ylimits] = cropMask(tongue_mask | spout_mask, max_spout_gap);
+[xlimits, ylimits] = getMaskLim(tongue_mask | spout_mask, max_spout_gap);
 tongue_mask = tongue_mask(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
 
 % Check that there is a tongue
-if sum(tongue_mask, 'all') < 3
+tongue_size = sum(tongue_mask, 'all');
+if tongue_size < 3
     if verbose
         warning('Tongue mask is empty, or nearly empty.')
     end
@@ -54,16 +55,13 @@ if sum(tongue_mask, 'all') < 3
     return;
 end
 
-% Crop spout mask for speed
-spout_mask = spout_mask(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
-
 % Get coordinate matrices for the whole mask area
-[x, y] = ndgrid(1:size(tongue_mask, 1), 1:size(tongue_mask, 2));
-xy = [x(:), y(:)];
+% [x, y] = ndgrid(1:size(tongue_mask, 1), 1:size(tongue_mask, 2));
+% xy = [x(:), y(:)];
 
 % Get coordinates of tongue pixels
-[xTongue, yTongue] = ind2sub(size(tongue_mask), find(tongue_mask));
-xyTongue = [xTongue, yTongue];
+% [xTongue, yTongue] = ind2sub(size(tongue_mask), find(tongue_mask));
+% xyTongue = [xTongue, yTongue];
 
 % Get mask of the outer edge of the original tongue pixels (includes
 % occlusion indent)
@@ -93,10 +91,17 @@ if isempty(conv_hull_tess) %dt.ConnectivityList)
     return;
 end
 
-convhull_mask = inHullMask(size(tongue_mask), xyTongueSurface, conv_hull_tess, 0);
+% Crop spout mask for speed
+spout_mask = spout_mask(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
+
+% Get coordinates of spout pixels
+[xSpout, ySpout] = ind2sub(size(spout_mask), find(spout_mask));
+xySpout = [xSpout, ySpout];
+
+spoutInTongueHull = inhull(xySpout, xyTongueSurface, conv_hull_tess, 0);
 
 % Check that tongue convex hull actually intersects spout
-if sum(convhull_mask & spout_mask, 'all') == 0
+if sum(spoutInTongueHull) == 0
     if verbose
         warning('No occlusion found.')
     end
@@ -106,14 +111,12 @@ if sum(convhull_mask & spout_mask, 'all') == 0
     return;
 end
 
+convhull_mask = inHullMask(size(tongue_mask), xyTongueSurface, conv_hull_tess, 0);
+
 % Get an ordered list of pixels around the edge of the convex hull of
 % tongue
 [xhb, yhb] = getMaskOrdering(getMaskSurface(convhull_mask), [], [-1, 0]);
 xyHullBoundary = [xhb', yhb'];
-
-% Get coordinates of spout pixels
-[xSpout, ySpout] = ind2sub(size(spout_mask), find(spout_mask));
-xySpout = [xSpout, ySpout];
 
 % Get pixels that are both in the outer boundary of the tongue convex hull,
 % AND in the spout mask. These pixels should represent the "gap" in the
@@ -138,11 +141,11 @@ xyConcavity = xyHullBoundary(gapBoundaries, :);
 % Interpolate new values within gap based on points on either side of the
 % gap
 try
-[xGapHealed, yGapHealed] = healGap(xyConcavity(:, 1), xyConcavity(:, 2), ceil(num_reference_points/2), size(xyGap, 1));
+[yGapHealed] = healGap(xyConcavity(:, 1), xyConcavity(:, 2), xyGap(:, 1));
 catch
     disp('oops')
 end
-xyFit = round([xGapHealed, yGapHealed]);
+xyFit = round([xyGap(:, 1), yGapHealed]);
 % Fit a spline to the gap border points, and use it to predict the outer
 % coordinates of the tongue that are behind the spout
 % try

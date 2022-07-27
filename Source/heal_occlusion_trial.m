@@ -53,23 +53,23 @@ for frame = 1:size(spout_bbox, 1)
         end
     end
 
-    [top_healed_mask, top_patch_size, top_spout_close] = heal_occlusion(top_tongue_mask, top_spout_mask, 5, plotHeal, sprintf('top frame %d', frame));
-    [bot_healed_mask, bot_patch_size, bot_spout_close] = heal_occlusion(bot_tongue_mask, bot_spout_mask, 5, plotHeal, sprintf('bot frame %d', frame));
+    [top_healed_mask, top_patch_size, top_tongue_size, top_spout_close] = heal_occlusion(top_tongue_mask, top_spout_mask, 5, plotHeal, sprintf('top frame %d', frame));
+    [bot_healed_mask, bot_patch_size, bot_tongue_size, bot_spout_close] = heal_occlusion(bot_tongue_mask, bot_spout_mask, 5, plotHeal, sprintf('bot frame %d', frame));
     
     spout_close = top_spout_close && bot_spout_close;
     
-    if top_patch_size > 0
-        next_report = length(top_report)+1;
-        top_report(next_report).frame = frame;
-        top_report(next_report).patch_size = top_patch_size;
-        top_report(next_report).spout_close = spout_close;
-        top_healed_masks(frame, :, :) = top_healed_mask;
-    end
-    if bot_patch_size > 0
-        next_report = length(bot_report)+1;
-        bot_report(next_report).frame = frame;
-        bot_report(next_report).patch_size = bot_patch_size;
-        bot_report(next_report).spout_close = spout_close;
-        bot_healed_masks(frame, :, :) = bot_healed_mask;
-    end
+    next_report = length(top_report)+1;
+    top_report(next_report).frame = frame;
+    top_report(next_report).tongue_size = top_tongue_size;
+    top_report(next_report).patch_size = top_patch_size;
+    top_report(next_report).spout_close = spout_close;
+    top_healed_masks(frame, :, :) = top_healed_mask;
+
+    next_report = length(bot_report)+1;
+    bot_report(next_report).frame = frame;
+    bot_report(next_report).patch_size = bot_patch_size;
+    bot_report(next_report).tongue_size = bot_tongue_size;
+    bot_report(next_report).spout_close = spout_close;
+    bot_healed_masks(frame, :, :) = bot_healed_mask;
+
 end
