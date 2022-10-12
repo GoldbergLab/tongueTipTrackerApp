@@ -2,6 +2,10 @@ function [t_stats] = assign_laser_2D(t_stats, xml_dir)
 
 xml_file = rdir(append(xml_dir, '*\*.xml'));
 
+if isempty(xml_file)
+    error('No xml files found in %s', xml_dir);
+end
+
 laser_2D = zeros(numel(t_stats), 1);
 
 for i = 1:max([t_stats.trial_num])
