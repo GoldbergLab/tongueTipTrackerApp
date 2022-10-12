@@ -3,67 +3,69 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
-        ImageAxes                       matlab.ui.control.UIAxes
-        SessionDataTable                matlab.ui.control.Table
-        FrameLabel                      matlab.ui.control.Label
-        FrameSlider                     matlab.ui.control.Slider
-        AddSessionButton                matlab.ui.control.Button
-        VideoBrowser                    matlab.ui.container.Tree
-        VideoBrowserLabel               matlab.ui.control.Label
-        LoadVideoButton                 matlab.ui.control.Button
-        FindDirectoryButton             matlab.ui.control.Button
-        ShowCrosshairCheckBox           matlab.ui.control.CheckBox
-        MarkerInstructionLabel          matlab.ui.control.Label
-        ShowMarkersCheckBox             matlab.ui.control.CheckBox
-        CurrentVideoLabel               matlab.ui.control.Label
-        OutputLabel_2                   matlab.ui.control.Label
-        Output                          matlab.ui.control.TextArea
-        TongueTipTrackerLabel           matlab.ui.control.Label
-        AConvertCINEstoAVIsButton       matlab.ui.control.Button
-        ParallelPoolStateLabel          matlab.ui.control.Label
-        StartParallelPoolButton         matlab.ui.control.Button
-        TiptrackprocessingLabel         matlab.ui.control.Label
-        VerboseCheckBox                 matlab.ui.control.CheckBox
-        MakeMoviesCheckBox              matlab.ui.control.CheckBox
-        PlotKinematicsCheckBox          matlab.ui.control.CheckBox
-        SaveTrackingDataCheckBox        matlab.ui.control.CheckBox
-        SaveKinematicsPlotsCheckBox     matlab.ui.control.CheckBox
-        TrackTongueTipsButton           matlab.ui.control.Button
-        SaveDataTableButton             matlab.ui.control.Button
-        LoadDataTableButton             matlab.ui.control.Button
-        CleartableButton                matlab.ui.control.Button
-        TopFiducialLabel                matlab.ui.control.Label
-        BotFiducialLabel                matlab.ui.control.Label
-        TopSpoutLabel                   matlab.ui.control.Label
-        BotSpoutLabel                   matlab.ui.control.Label
-        OpenselecteddirectoryButton     matlab.ui.control.Button
-        BGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
-        BLabelvideoswcuelaserButton     matlab.ui.control.Button
-        DryrunCheckBox                  matlab.ui.control.CheckBox
-        reloadVideoBrowser              matlab.ui.control.Button
-        CAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
-        ACombineconvertFPGAdatfilesButton  matlab.ui.control.Button
-        BProcessFPGAdataButton          matlab.ui.control.Button
-        PlotNplickOutputCheckBox        matlab.ui.control.CheckBox
-        ClearButton                     matlab.ui.control.Button
-        DIncorporateFPGAdataintotiptracksButton  matlab.ui.control.Button
-        OverlayMasksCheckBox            matlab.ui.control.CheckBox
-        VideoprocessingLabel            matlab.ui.control.Label
-        MaskprocessingLabel             matlab.ui.control.Label
-        FPGAdataprocessingLabel         matlab.ui.control.Label
-        HoverovertheimageandpressLabel  matlab.ui.control.Label
-        cursorPositionLabel             matlab.ui.control.Label
-        HelpButton                      matlab.ui.control.Button
-        SetupsessiondirectoriesLabel    matlab.ui.control.Label
-        ActivateallButton               matlab.ui.control.Button
-        DeactivateallButton             matlab.ui.control.Button
-        FPGAdataformatDropDownLabel     matlab.ui.control.Label
-        FPGAdataformatDropDown          matlab.ui.control.DropDown
-        MeasuringRulerCheckBox          matlab.ui.control.CheckBox
-        SpoutWidthLabel                 matlab.ui.control.Label
-        AddDataTableButton              matlab.ui.control.Button
-        DeleteSessionButton             matlab.ui.control.Button
+        A2OcclusioneditorButton         matlab.ui.control.Button
+        AHealSpoutOcclusionsButton      matlab.ui.control.Button
         RelabelCheckBox                 matlab.ui.control.CheckBox
+        DeleteSessionButton             matlab.ui.control.Button
+        AddDataTableButton              matlab.ui.control.Button
+        SpoutWidthLabel                 matlab.ui.control.Label
+        MeasuringRulerCheckBox          matlab.ui.control.CheckBox
+        FPGAdataformatDropDown          matlab.ui.control.DropDown
+        FPGAdataformatDropDownLabel     matlab.ui.control.Label
+        DeactivateallButton             matlab.ui.control.Button
+        ActivateallButton               matlab.ui.control.Button
+        SetupsessiondirectoriesLabel    matlab.ui.control.Label
+        HelpButton                      matlab.ui.control.Button
+        cursorPositionLabel             matlab.ui.control.Label
+        HoverovertheimageandpressLabel  matlab.ui.control.Label
+        FPGAdataprocessingLabel         matlab.ui.control.Label
+        MaskprocessingLabel             matlab.ui.control.Label
+        VideoprocessingLabel            matlab.ui.control.Label
+        OverlayMasksCheckBox            matlab.ui.control.CheckBox
+        EIncorporateFPGAdataintotiptracksButton  matlab.ui.control.Button
+        ClearButton                     matlab.ui.control.Button
+        PlotNplickOutputCheckBox        matlab.ui.control.CheckBox
+        CProcessFPGAdataButton          matlab.ui.control.Button
+        BCombineconvertFPGAdatfilesButton  matlab.ui.control.Button
+        DAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
+        reloadVideoBrowser              matlab.ui.control.Button
+        DryrunCheckBox                  matlab.ui.control.CheckBox
+        BLabelvideoswcuelaserButton     matlab.ui.control.Button
+        CGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
+        OpenselecteddirectoryButton     matlab.ui.control.Button
+        BotSpoutLabel                   matlab.ui.control.Label
+        TopSpoutLabel                   matlab.ui.control.Label
+        BotFiducialLabel                matlab.ui.control.Label
+        TopFiducialLabel                matlab.ui.control.Label
+        CleartableButton                matlab.ui.control.Button
+        LoadDataTableButton             matlab.ui.control.Button
+        SaveDataTableButton             matlab.ui.control.Button
+        TrackTongueTipsButton           matlab.ui.control.Button
+        SaveKinematicsPlotsCheckBox     matlab.ui.control.CheckBox
+        SaveTrackingDataCheckBox        matlab.ui.control.CheckBox
+        PlotKinematicsCheckBox          matlab.ui.control.CheckBox
+        MakeMoviesCheckBox              matlab.ui.control.CheckBox
+        VerboseCheckBox                 matlab.ui.control.CheckBox
+        TiptrackprocessingLabel         matlab.ui.control.Label
+        StartParallelPoolButton         matlab.ui.control.Button
+        ParallelPoolStateLabel          matlab.ui.control.Label
+        AConvertCINEstoAVIsButton       matlab.ui.control.Button
+        TongueTipTrackerLabel           matlab.ui.control.Label
+        Output                          matlab.ui.control.TextArea
+        OutputLabel_2                   matlab.ui.control.Label
+        CurrentVideoLabel               matlab.ui.control.Label
+        ShowMarkersCheckBox             matlab.ui.control.CheckBox
+        MarkerInstructionLabel          matlab.ui.control.Label
+        ShowCrosshairCheckBox           matlab.ui.control.CheckBox
+        FindDirectoryButton             matlab.ui.control.Button
+        LoadVideoButton                 matlab.ui.control.Button
+        VideoBrowserLabel               matlab.ui.control.Label
+        VideoBrowser                    matlab.ui.container.Tree
+        AddSessionButton                matlab.ui.control.Button
+        FrameSlider                     matlab.ui.control.Slider
+        FrameLabel                      matlab.ui.control.Label
+        SessionDataTable                matlab.ui.control.Table
+        ImageAxes                       matlab.ui.control.UIAxes
     end
 
 
@@ -878,12 +880,12 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
 %                     app.imageMarkers.topBox.Position = [minX, topY0, maxX-minX, topY1-topY0];
 %                     app.imageMarkers.botBox.Position = [minX, botY0, maxX-minX, botY1-botY0];
                 end
-                if all(topSpoutXs) < 0
+                if all(topSpoutXs < 0)
                     app.imageMarkers.topSpout.Visible = 'off';
                 else
                     app.imageMarkers.topSpout.Visible = 'on';
                 end
-                if all(botSpoutXs) < 0
+                if all(botSpoutXs < 0)
                     app.imageMarkers.botSpoutX.Visible = 'off';
                 else
                     app.imageMarkers.botSpoutX.Visible = 'on';
@@ -939,10 +941,10 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             im_shifts = cell2mat(cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false)) - cell2mat(cellfun(@str2num, dataTable.Top_Spout_X, 'UniformOutput', false));
 
             verboseFlag = app.VerboseCheckBox.Value;
-            makeMovieFlag = app.MakeMoviesCheckBox.Value;
+%             makeMovieFlag = app.MakeMoviesCheckBox.Value;
             saveDataFlag = app.SaveTrackingDataCheckBox.Value;
-            savePlotsFlag = app.SaveKinematicsPlotsCheckBox.Value;
-            plotFlag = app.PlotKinematicsCheckBox.Value;
+%             savePlotsFlag = app.SaveKinematicsPlotsCheckBox.Value;
+%             plotFlag = app.PlotKinematicsCheckBox.Value;
             
             % set up base params
             baseParams = setTrackParams();
@@ -1266,14 +1268,16 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             if ~exist('dataTable', 'var')
                 dataTable = app.getDataTable();
             end
-            motorSpeed = 0.45;  % ADD GUI DATATABLE GETTER CODE HERE
+            motorSpeed = app.getDataTableElements('MotorSpeed', k, dataTable);
+%             motorSpeed = 0.45;  % ADD GUI DATATABLE GETTER CODE HERE
         end
         function motorLatency= getMotorLatency(app, k, dataTable)
             % Get motor latency (ms before motor responds) for session # k
             if ~exist('dataTable', 'var')
                 dataTable = app.getDataTable();
             end
-            motorLatency= 27;  % ADD GUI DATATABLE GETTER CODE HERE
+            motorLatency = app.getDataTableElements('MotorLatency', k, dataTable);
+%             motorLatency= 27;  % ADD GUI DATATABLE GETTER CODE HERE
         end
         
         function updateRulerLength(app)
@@ -1627,7 +1631,6 @@ end
                         width = botSpoutYs(idx) - curY;
                         dataTable = app.setDataTableElements('Spout_Width', width, [], dataTable);
                         app.updateDataTable(dataTable);
-                        disp('spout width')
                     else
                         app.print('Please mark at least one bottom spout location before marking spout width')
                     end
@@ -1774,9 +1777,8 @@ end
             app.print('...done labeling avi files with cue and laser')            
         end
 
-        % Button pushed function: 
-        % BGetlicksegmentationandkinematicsButton
-        function BGetlicksegmentationandkinematicsButtonPushed(app, event)
+        % Button pushed function: CGetlicksegmentationandkinematicsButton
+        function CGetlicksegmentationandkinematicsButtonPushed(app, event)
             saveFlag = true;
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
@@ -1812,8 +1814,8 @@ end
             app.updateVideoBrowser(forceUpdate, lazy);
         end
 
-        % Button pushed function: CAlignFPGAandVideoTrialsButton
-        function CAlignFPGAandVideoTrialsButtonPushed(app, event)
+        % Button pushed function: DAlignFPGAandVideoTrialsButton
+        function DAlignFPGAandVideoTrialsButtonPushed(app, event)
             dataTable = app.getDataTable();
             sessionMaskRoots = dataTable.SessionMaskDirs;
             sessionVideoRoots = dataTable.SessionVideoDirs;
@@ -1850,8 +1852,8 @@ end
             
         end
 
-        % Button pushed function: ACombineconvertFPGAdatfilesButton
-        function ACombineconvertFPGAdatfilesButtonPushed(app, event)
+        % Button pushed function: BCombineconvertFPGAdatfilesButton
+        function BCombineconvertFPGAdatfilesButtonPushed(app, event)
             % Run ppscript for all FPGA data directories
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
@@ -1883,8 +1885,8 @@ end
             app.print('...done combining/converting FPGA data');
         end
 
-        % Button pushed function: BProcessFPGAdataButton
-        function BProcessFPGAdataButtonPushed(app, event)
+        % Button pushed function: CProcessFPGAdataButton
+        function CProcessFPGAdataButtonPushed(app, event)
             app.print('Processing FPGA data...')
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
@@ -1922,9 +1924,8 @@ end
             app.Output.Value = '';
         end
 
-        % Button pushed function: 
-        % DIncorporateFPGAdataintotiptracksButton
-        function DIncorporateFPGAdataintotiptracksButtonPushed(app, event)
+        % Button pushed function: EIncorporateFPGAdataintotiptracksButton
+        function EIncorporateFPGAdataintotiptracksButtonPushed(app, event)
             app.print('Incorporating FPGA data into tip tracks...')
             dataTable = app.getDataTable();
             sessionMaskRoots = dataTable.SessionMaskDirs;
@@ -2121,6 +2122,29 @@ helpMsg = {...
                 app.updateDataTable(dataTable);
             end
         end
+
+        % Button pushed function: AHealSpoutOcclusionsButton
+        function AHealSpoutOcclusionsButtonPushed(app, event)
+            dataTable = app.getDataTable();
+            sessionMaskRoots = dataTable.SessionMaskDirs;
+            sessionVideoRoots = dataTable.SessionVideoDirs;
+            sessionFPGARoots = dataTable.SessionFPGADirs;
+            
+            time_aligned_trials = [dataTable.VideoStartTrial, dataTable.FPGAStartTrial];
+            
+            for session_num = 1:length(sessionMaskRoots)
+                spout_calibration = app.getSpoutPositionCalibration(session_num);
+                sessionMaskRoot = sessionMaskRoots{session_num};
+                sessionVideoRoot = sessionVideoRoots{session_num};
+                sessionFPGARoot = sessionFPGARoots{session_num};
+                time_aligned_trial = time_aligned_trials(session_num, :);
+                cue_frame = 1001;  % This is typically the cue frame
+
+%                      viewSpoutTracking(sessionMaskRoot, sessionVideoRoot, sessionFPGARoot, time_aligned_trial, spout_calibration, cue_frame)
+
+                heal_occlusion_session(sessionMaskRoot, sessionVideoRoot, sessionFPGARoot, time_aligned_trial, spout_calibration, cue_frame);
+            end
+        end
     end
 
     % Component initialization
@@ -2139,12 +2163,15 @@ helpMsg = {...
 
             % Create ImageAxes
             app.ImageAxes = uiaxes(app.UIFigure);
-            app.ImageAxes.Box = 'on';
-            app.ImageAxes.BoxStyle = 'full';
             app.ImageAxes.XTick = [];
+            app.ImageAxes.XTickLabelRotation = 0;
             app.ImageAxes.XTickLabel = {'[ ]'};
             app.ImageAxes.YTick = [];
+            app.ImageAxes.YTickLabelRotation = 0;
+            app.ImageAxes.ZTickLabelRotation = 0;
+            app.ImageAxes.BoxStyle = 'full';
             app.ImageAxes.LineWidth = 1;
+            app.ImageAxes.Box = 'on';
             app.ImageAxes.Position = [15 180 223 507];
 
             % Create SessionDataTable
@@ -2267,41 +2294,41 @@ helpMsg = {...
 
             % Create TiptrackprocessingLabel
             app.TiptrackprocessingLabel = uilabel(app.UIFigure);
-            app.TiptrackprocessingLabel.Position = [673 596 137 22];
+            app.TiptrackprocessingLabel.Position = [673 522 137 22];
             app.TiptrackprocessingLabel.Text = 'Tip track processing';
 
             % Create VerboseCheckBox
             app.VerboseCheckBox = uicheckbox(app.UIFigure);
             app.VerboseCheckBox.Text = 'Verbose processing';
-            app.VerboseCheckBox.Position = [671 575 137 22];
+            app.VerboseCheckBox.Position = [671 501 137 22];
             app.VerboseCheckBox.Value = true;
 
             % Create MakeMoviesCheckBox
             app.MakeMoviesCheckBox = uicheckbox(app.UIFigure);
             app.MakeMoviesCheckBox.Text = 'Make movies';
-            app.MakeMoviesCheckBox.Position = [671 491 137 22];
+            app.MakeMoviesCheckBox.Position = [671 417 137 22];
 
             % Create PlotKinematicsCheckBox
             app.PlotKinematicsCheckBox = uicheckbox(app.UIFigure);
             app.PlotKinematicsCheckBox.Text = 'Plot kinematics';
-            app.PlotKinematicsCheckBox.Position = [671 533 137 22];
+            app.PlotKinematicsCheckBox.Position = [671 459 137 22];
 
             % Create SaveTrackingDataCheckBox
             app.SaveTrackingDataCheckBox = uicheckbox(app.UIFigure);
             app.SaveTrackingDataCheckBox.Text = 'Save tracking data';
-            app.SaveTrackingDataCheckBox.Position = [671 554 137 22];
+            app.SaveTrackingDataCheckBox.Position = [671 480 137 22];
             app.SaveTrackingDataCheckBox.Value = true;
 
             % Create SaveKinematicsPlotsCheckBox
             app.SaveKinematicsPlotsCheckBox = uicheckbox(app.UIFigure);
             app.SaveKinematicsPlotsCheckBox.Text = 'Save kinematics plots';
-            app.SaveKinematicsPlotsCheckBox.Position = [671 512 137 22];
+            app.SaveKinematicsPlotsCheckBox.Position = [671 438 137 22];
 
             % Create TrackTongueTipsButton
             app.TrackTongueTipsButton = uibutton(app.UIFigure, 'push');
             app.TrackTongueTipsButton.ButtonPushedFcn = createCallbackFcn(app, @TrackTongueTipsButtonPushed, true);
-            app.TrackTongueTipsButton.Position = [671 444 130 42];
-            app.TrackTongueTipsButton.Text = 'A. Track tongue tips';
+            app.TrackTongueTipsButton.Position = [671 370 130 42];
+            app.TrackTongueTipsButton.Text = 'B. Track tongue tips';
 
             % Create SaveDataTableButton
             app.SaveDataTableButton = uibutton(app.UIFigure, 'push');
@@ -2350,11 +2377,11 @@ helpMsg = {...
             app.OpenselecteddirectoryButton.Position = [486 217 94 36];
             app.OpenselecteddirectoryButton.Text = {'Open selected'; 'directory'};
 
-            % Create BGetlicksegmentationandkinematicsButton
-            app.BGetlicksegmentationandkinematicsButton = uibutton(app.UIFigure, 'push');
-            app.BGetlicksegmentationandkinematicsButton.ButtonPushedFcn = createCallbackFcn(app, @BGetlicksegmentationandkinematicsButtonPushed, true);
-            app.BGetlicksegmentationandkinematicsButton.Position = [671 395 130 42];
-            app.BGetlicksegmentationandkinematicsButton.Text = {'B. Get lick segmentation'; 'and kinematics'};
+            % Create CGetlicksegmentationandkinematicsButton
+            app.CGetlicksegmentationandkinematicsButton = uibutton(app.UIFigure, 'push');
+            app.CGetlicksegmentationandkinematicsButton.ButtonPushedFcn = createCallbackFcn(app, @CGetlicksegmentationandkinematicsButtonPushed, true);
+            app.CGetlicksegmentationandkinematicsButton.Position = [671 321 130 42];
+            app.CGetlicksegmentationandkinematicsButton.Text = {'C. Get lick segmentation'; 'and kinematics'};
 
             % Create BLabelvideoswcuelaserButton
             app.BLabelvideoswcuelaserButton = uibutton(app.UIFigure, 'push');
@@ -2376,30 +2403,30 @@ helpMsg = {...
             app.reloadVideoBrowser.Position = [337 684 25 23];
             app.reloadVideoBrowser.Text = '';
 
-            % Create CAlignFPGAandVideoTrialsButton
-            app.CAlignFPGAandVideoTrialsButton = uibutton(app.UIFigure, 'push');
-            app.CAlignFPGAandVideoTrialsButton.ButtonPushedFcn = createCallbackFcn(app, @CAlignFPGAandVideoTrialsButtonPushed, true);
-            app.CAlignFPGAandVideoTrialsButton.Position = [669 364 268 22];
-            app.CAlignFPGAandVideoTrialsButton.Text = 'C. Align FPGA and Video Trials';
+            % Create DAlignFPGAandVideoTrialsButton
+            app.DAlignFPGAandVideoTrialsButton = uibutton(app.UIFigure, 'push');
+            app.DAlignFPGAandVideoTrialsButton.ButtonPushedFcn = createCallbackFcn(app, @DAlignFPGAandVideoTrialsButtonPushed, true);
+            app.DAlignFPGAandVideoTrialsButton.Position = [669 290 268 22];
+            app.DAlignFPGAandVideoTrialsButton.Text = 'D. Align FPGA and Video Trials';
 
-            % Create ACombineconvertFPGAdatfilesButton
-            app.ACombineconvertFPGAdatfilesButton = uibutton(app.UIFigure, 'push');
-            app.ACombineconvertFPGAdatfilesButton.ButtonPushedFcn = createCallbackFcn(app, @ACombineconvertFPGAdatfilesButtonPushed, true);
-            app.ACombineconvertFPGAdatfilesButton.Tooltip = {'Runs ppscript on all FPGA data directories specified'};
-            app.ACombineconvertFPGAdatfilesButton.Position = [809 444 130 42];
-            app.ACombineconvertFPGAdatfilesButton.Text = {'A. Combine/convert '; 'FPGA dat files'};
+            % Create BCombineconvertFPGAdatfilesButton
+            app.BCombineconvertFPGAdatfilesButton = uibutton(app.UIFigure, 'push');
+            app.BCombineconvertFPGAdatfilesButton.ButtonPushedFcn = createCallbackFcn(app, @BCombineconvertFPGAdatfilesButtonPushed, true);
+            app.BCombineconvertFPGAdatfilesButton.Tooltip = {'Runs ppscript on all FPGA data directories specified'};
+            app.BCombineconvertFPGAdatfilesButton.Position = [809 370 130 42];
+            app.BCombineconvertFPGAdatfilesButton.Text = {'B. Combine/convert '; 'FPGA dat files'};
 
-            % Create BProcessFPGAdataButton
-            app.BProcessFPGAdataButton = uibutton(app.UIFigure, 'push');
-            app.BProcessFPGAdataButton.ButtonPushedFcn = createCallbackFcn(app, @BProcessFPGAdataButtonPushed, true);
-            app.BProcessFPGAdataButton.Tooltip = {'Runs nplick_struct on all FPGA data directories specified. Must combine/convert dat files first.'};
-            app.BProcessFPGAdataButton.Position = [809 395 77 42];
-            app.BProcessFPGAdataButton.Text = {'B. Process '; 'FPGA data'};
+            % Create CProcessFPGAdataButton
+            app.CProcessFPGAdataButton = uibutton(app.UIFigure, 'push');
+            app.CProcessFPGAdataButton.ButtonPushedFcn = createCallbackFcn(app, @CProcessFPGAdataButtonPushed, true);
+            app.CProcessFPGAdataButton.Tooltip = {'Runs nplick_struct on all FPGA data directories specified. Must combine/convert dat files first.'};
+            app.CProcessFPGAdataButton.Position = [809 321 78 42];
+            app.CProcessFPGAdataButton.Text = {'C. Process '; 'FPGA data'};
 
             % Create PlotNplickOutputCheckBox
             app.PlotNplickOutputCheckBox = uicheckbox(app.UIFigure);
             app.PlotNplickOutputCheckBox.Text = {'Plot'; 'output'};
-            app.PlotNplickOutputCheckBox.Position = [890 395 55 41];
+            app.PlotNplickOutputCheckBox.Position = [890 321 55 41];
 
             % Create ClearButton
             app.ClearButton = uibutton(app.UIFigure, 'push');
@@ -2407,11 +2434,11 @@ helpMsg = {...
             app.ClearButton.Position = [1008 680 41 22];
             app.ClearButton.Text = 'Clear';
 
-            % Create DIncorporateFPGAdataintotiptracksButton
-            app.DIncorporateFPGAdataintotiptracksButton = uibutton(app.UIFigure, 'push');
-            app.DIncorporateFPGAdataintotiptracksButton.ButtonPushedFcn = createCallbackFcn(app, @DIncorporateFPGAdataintotiptracksButtonPushed, true);
-            app.DIncorporateFPGAdataintotiptracksButton.Position = [669 334 268 22];
-            app.DIncorporateFPGAdataintotiptracksButton.Text = 'D. Incorporate FPGA data into tip tracks';
+            % Create EIncorporateFPGAdataintotiptracksButton
+            app.EIncorporateFPGAdataintotiptracksButton = uibutton(app.UIFigure, 'push');
+            app.EIncorporateFPGAdataintotiptracksButton.ButtonPushedFcn = createCallbackFcn(app, @EIncorporateFPGAdataintotiptracksButtonPushed, true);
+            app.EIncorporateFPGAdataintotiptracksButton.Position = [669 260 268 22];
+            app.EIncorporateFPGAdataintotiptracksButton.Text = 'E. Incorporate FPGA data into tip tracks';
 
             % Create OverlayMasksCheckBox
             app.OverlayMasksCheckBox = uicheckbox(app.UIFigure);
@@ -2483,13 +2510,13 @@ helpMsg = {...
             % Create FPGAdataformatDropDownLabel
             app.FPGAdataformatDropDownLabel = uilabel(app.UIFigure);
             app.FPGAdataformatDropDownLabel.HorizontalAlignment = 'right';
-            app.FPGAdataformatDropDownLabel.Position = [811 617 102 22];
+            app.FPGAdataformatDropDownLabel.Position = [807 617 102 22];
             app.FPGAdataformatDropDownLabel.Text = 'FPGA data format';
 
             % Create FPGAdataformatDropDown
             app.FPGAdataformatDropDown = uidropdown(app.UIFigure);
             app.FPGAdataformatDropDown.Items = {'Classic', '2D Fakeout'};
-            app.FPGAdataformatDropDown.Position = [811 596 100 22];
+            app.FPGAdataformatDropDown.Position = [807 596 130 22];
             app.FPGAdataformatDropDown.Value = '2D Fakeout';
 
             % Create MeasuringRulerCheckBox
@@ -2521,6 +2548,17 @@ helpMsg = {...
             app.RelabelCheckBox.Tooltip = {'Relabel already-labeled videos?'};
             app.RelabelCheckBox.Text = 'Relabel';
             app.RelabelCheckBox.Position = [588 531 74 22];
+
+            % Create AHealSpoutOcclusionsButton
+            app.AHealSpoutOcclusionsButton = uibutton(app.UIFigure, 'push');
+            app.AHealSpoutOcclusionsButton.ButtonPushedFcn = createCallbackFcn(app, @AHealSpoutOcclusionsButtonPushed, true);
+            app.AHealSpoutOcclusionsButton.Position = [669 570 268 22];
+            app.AHealSpoutOcclusionsButton.Text = 'A. Heal Spout Occlusions';
+
+            % Create A2OcclusioneditorButton
+            app.A2OcclusioneditorButton = uibutton(app.UIFigure, 'push');
+            app.A2OcclusioneditorButton.Position = [669 543 132 22];
+            app.A2OcclusioneditorButton.Text = 'A2. Occlusion editor';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
