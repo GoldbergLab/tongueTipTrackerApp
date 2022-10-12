@@ -1,4 +1,4 @@
-function t_stats = mapSpoutCommandToPosition(t_stats, spoutCalibration)
+function t_stats = mapSpoutCommandToPosition(t_stats, spout_calibration)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % mapSpoutCommandToPosition: Map the spout motor commands to a pixel
 %   position in video.c
@@ -63,7 +63,7 @@ all_command_x = horzcat(t_stats.actuator_command_x);
 all_command_y = horzcat(t_stats.actuator_command_y);
 
 % Add command==>position mappings to spoutCalibration struct
-spoutCalibration = addPositionToCalibration(spoutCalibration, all_command_x, all_command_y);
+spout_calibration = addPositionToCalibration(spout_calibration, all_command_x, all_command_y);
 
 for lickNum = 1:length(t_stats)
     command_x = t_stats(lickNum).actuator_command_x;
@@ -75,13 +75,13 @@ for lickNum = 1:length(t_stats)
         % vector is stored.
         
         % Map command to position
-        t_stats(lickNum).spout_position_x = spoutCalibration.x_map(command_x')';
-        t_stats(lickNum).spout_position_y = spoutCalibration.y_map(command_y')';
-        t_stats(lickNum).spout_position_z = spoutCalibration.z_map(command_z')';
+        t_stats(lickNum).spout_position_x = spout_calibration.x_map(command_x')';
+        t_stats(lickNum).spout_position_y = spout_calibration.y_map(command_y')';
+        t_stats(lickNum).spout_position_z = spout_calibration.z_map(command_z')';
         % Interpolate position where there are sudden jumps.
-        t_stats(lickNum).spout_position_x = inferSpoutPosition(t_stats(lickNum).spout_position_x, spoutCalibration.speed, spoutCalibration.latency);
-        t_stats(lickNum).spout_position_y = inferSpoutPosition(t_stats(lickNum).spout_position_y, spoutCalibration.speed, spoutCalibration.latency);
-        t_stats(lickNum).spout_position_z = inferSpoutPosition(t_stats(lickNum).spout_position_z, spoutCalibration.speed, spoutCalibration.latency);
+        t_stats(lickNum).spout_position_x = inferSpoutPosition(t_stats(lickNum).spout_position_x, spout_calibration.speed, spout_calibration.latency);
+        t_stats(lickNum).spout_position_y = inferSpoutPosition(t_stats(lickNum).spout_position_y, spout_calibration.speed, spout_calibration.latency);
+        t_stats(lickNum).spout_position_z = inferSpoutPosition(t_stats(lickNum).spout_position_z, spout_calibration.speed, spout_calibration.latency);
     else
         t_stats(lickNum).spout_position_x = NaN;
         t_stats(lickNum).spout_position_y = NaN;
