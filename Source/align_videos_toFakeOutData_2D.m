@@ -35,6 +35,9 @@ for sessionNum = 1:numel(sessionVideoRoots)
     t_stats = assign_actuator_commands(t_stats, l_sp_struct, vid_index);
     t_stats = mapSpoutCommandToPosition(t_stats, spoutPositionCalibrations{sessionNum});
     
+    %% Add spout contact voxels
+    t_stats = find_contact_voxels(t_stats, sessionMaskRoots{sessionNum});
+
     %% Save the Struct
     save(strcat(sessionMaskRoots{sessionNum},'\t_stats.mat'),'t_stats','l_sp_struct','vid_index');
 
