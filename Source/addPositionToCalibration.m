@@ -1,9 +1,9 @@
-function spoutCalibration = addPositionToCalibration(spoutCalibration, command_x, command_y, command_z)
+function [spout_calibration, command_x, command_y, command_z] = addPositionToCalibration(spout_calibration, command_x, command_y, command_z)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % mapSpoutCommandToPosition: Complete the calibration struct by adding a 
 %   mapping from motor command to position.
 % usage:  
-%   spoutCalibration = addPositionToCalibration(spoutCalibration, 
+%   spout_calibration = addPositionToCalibration(spout_calibration, 
 %                                               command_x, command_y, 
 %                                               command_z)
 %
@@ -15,10 +15,10 @@ function spoutCalibration = addPositionToCalibration(spoutCalibration, command_x
 %    command_z is an optional list of motor command values in Volts, in the
 %       order they appeared in the session. If not provided, this is set to
 %       zero.
-%    spoutCalibration is a structure containing a mapping between motor
+%    spout_calibration is a structure containing a mapping between motor
 %       command space and video pixel space. It should have the following
 %       structure:
-%       spoutCalibration
+%       spout_calibration
 %           .x(1)  = <x pixel coordinate for spout in initial position>
 %           .x(2)  = <x pixel coordinate for spout in next position>
 %               ...
@@ -68,14 +68,20 @@ function spoutCalibration = addPositionToCalibration(spoutCalibration, command_x
 % Real_email = regexprep(Email,{'=','*'},{'@','.'})
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~exist('command_z', 'var') || isempty(command_z)
-    command_z = 0*command_y;
-end
 if iscolumn(command_x)
     command_x = command_x';
 end
 if iscolumn(command_y)
     command_y = command_y';
+end
+if ~exist('command_z', 'var') || isempty(command_z)
+    % Create a fake command_z vector proportional to the spout_calibration.z
+    %   positions recorded by first creating a mapping function that
+    %   generates a fake command_z vector from command_x and command_y
+    %   vectors.
+    spout_calibration = add_xy_to_z_command_map(spout_calibration, command_x, command_y);
+
+    command_z = spout_calibration.map_xy_to_z_command(command_x, command_y);
 end
 if iscolumn(command_z)
     command_z = command_z';
@@ -90,26 +96,26 @@ all_command = all_command(:, notNans);
 % by whichever target position command came first in the session, then
 % any subsequent target position commands in order.
 unique_actuator_commands = unique(all_command', 'row', 'stable')';
-spoutCalibration.cx = unique_actuator_commands(1, :);
-spoutCalibration.cy = unique_actuator_commands(2, :);
-spoutCalibration.cz = unique_actuator_commands(3, :);
+spout_calibration.cx = unique_actuator_commands(1, :);
+spout_calibration.cy = unique_actuator_commands(2, :);
+spout_calibration.cz = unique_actuator_commands(3, :);
 
 % Trim command and position vectors to same length
-numXCalPoints = min([length(spoutCalibration.cx), length(spoutCalibration.x)]);
-numYCalPoints = min([length(spoutCalibration.cy), length(spoutCalibration.y)]);
-numZCalPoints = min([length(spoutCalibration.cz), length(spoutCalibration.z)]);
-spoutCalibration.cx = spoutCalibration.cx(1:numXCalPoints);
-spoutCalibration.cy = spoutCalibration.cy(1:numYCalPoints);
-spoutCalibration.cz = spoutCalibration.cz(1:numZCalPoints);
-spoutCalibration.x = spoutCalibration.x(1:numXCalPoints);
-spoutCalibration.y = spoutCalibration.y(1:numYCalPoints);
-spoutCalibration.z = spoutCalibration.z(1:numZCalPoints);
+numXCalPoints = min([length(spout_calibration.cx), length(spout_calibration.x)]);
+numYCalPoints = min([length(spout_calibration.cy), length(spout_calibration.y)]);
+numZCalPoints = min([length(spout_calibration.cz), length(spout_calibration.z)]);
+spout_calibration.cx = spout_calibration.cx(1:numXCalPoints);
+spout_calibration.cy = spout_calibration.cy(1:numYCalPoints);
+spout_calibration.cz = spout_calibration.cz(1:numZCalPoints);
+spout_calibration.x = spout_calibration.x(1:numXCalPoints);
+spout_calibration.y = spout_calibration.y(1:numYCalPoints);
+spout_calibration.z = spout_calibration.z(1:numZCalPoints);
 
 % Fit a line to the command/position mapping to get a general mapping
-lmx = fitlm(spoutCalibration.cx, spoutCalibration.x);
-lmy = fitlm(spoutCalibration.cy, spoutCalibration.y);
-lmz = fitlm(spoutCalibration.cz, spoutCalibration.z);
+lmx = fitlm(spout_calibration.cx, spout_calibration.x);
+lmy = fitlm(spout_calibration.cy, spout_calibration.y);
+lmz = fitlm(spout_calibration.cz, spout_calibration.z);
 
-spoutCalibration.x_map = @lmx.predict;
-spoutCalibration.y_map = @lmy.predict;
-spoutCalibration.z_map = @lmz.predict;
+spout_calibration.x_map = @lmx.predict;
+spout_calibration.y_map = @lmy.predict;
+spout_calibration.z_map = @lmz.predict;

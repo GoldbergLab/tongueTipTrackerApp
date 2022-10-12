@@ -19,3 +19,5 @@ top = false(top_mask_size);
 
 bot(bot_bbox(1):(bot_bbox(1)+bot_bbox(3)), bot_bbox(2):(bot_bbox(2) + bot_bbox(4))) = true;
 top(top_bbox(1):(top_bbox(1)+top_bbox(3)), top_bbox(2):(top_bbox(2) + top_bbox(4))) = true;
+
+top = flipud(top);

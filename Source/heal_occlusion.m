@@ -1,4 +1,4 @@
-function [healed_mask, patch_size, tongue_size, spout_close] = heal_occlusion(tongue_mask, spout_mask, max_spout_gap, debug, plot_title)
+function [healed_mask, patch_size, tongue_size, spout_close] = heal_occlusion(tongue_mask, spout_mask, max_spout_gap, debug, plot_title, video_frame)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % heal_occlusion: Heal a spout occlusion in a 2D tongue mask
 % usage:  healed_mask = heal_occlusion(tongue_mask, spout_mask, 
@@ -33,15 +33,15 @@ end
 if ~exist('plot_title', 'var') || isempty(plot_title)
     plot_title = 'Occlusion healing';
 end
+if ~exist('video_frame', 'var') || isempty('video_frame')
+    video_frame = [];
+end
 
 verbose = false;
 
 % Store original mask size, so the masks can be reconstituted at the end
+original_tongue_mask = tongue_mask;
 original_mask_size = size(tongue_mask);
-
-% Crop tongue mask for speed
-[xlimits, ylimits] = getMaskLim(tongue_mask | spout_mask, max_spout_gap);
-tongue_mask = tongue_mask(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
 
 % Check that there is a tongue
 tongue_size = sum(tongue_mask, 'all');
@@ -49,11 +49,15 @@ if tongue_size < 3
     if verbose
         warning('Tongue mask is empty, or nearly empty.')
     end
-    healed_mask = uncrop(tongue_mask, original_mask_size, xlimits, ylimits);
+    healed_mask = tongue_mask;
     patch_size = 0;
     spout_close = false;
     return;
 end
+
+% Crop tongue mask for speed
+[xlimits, ylimits] = getMaskLim(tongue_mask | spout_mask, max_spout_gap);
+tongue_mask = tongue_mask(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
 
 % Get coordinate matrices for the whole mask area
 % [x, y] = ndgrid(1:size(tongue_mask, 1), 1:size(tongue_mask, 2));
@@ -71,10 +75,13 @@ xyTongueSurface = [xTongueSurface, yTongueSurface];
 
 % Get convex hull mask of tongue
 try
-    conv_hull_tess = convhulln(xyTongueSurface);
+    conv_hull_tess = convhull(xyTongueSurface);
+    % inhull expects the output style that convhulln provides, so we have
+    % to replicate that:
+    conv_hull_tess = [conv_hull_tess(1:end-1), conv_hull_tess(2:end)];
 catch ME
     switch ME.identifier
-        case 'MATLAB:qhullmx:DegenerateData'
+        case {'MATLAB:qhullmx:DegenerateData', 'MATLAB:convhull:EmptyConvhull2DErrId'}
             conv_hull_tess = [];
         otherwise
             rethrow(ME);
@@ -85,7 +92,7 @@ if isempty(conv_hull_tess) %dt.ConnectivityList)
     if verbose
         warning('Tongue mask is insufficiently large to complete calculation.')
     end
-    healed_mask = uncrop(tongue_mask, original_mask_size, xlimits, ylimits);
+    healed_mask = original_tongue_mask;
     patch_size = 0;
     spout_close = false;
     return;
@@ -94,79 +101,99 @@ end
 % Crop spout mask for speed
 spout_mask = spout_mask(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
 
-% Get coordinates of spout pixels
-[xSpout, ySpout] = ind2sub(size(spout_mask), find(spout_mask));
-xySpout = [xSpout, ySpout];
+spout_surface_mask = getMaskSurface(spout_mask);
+% Get coordinates of spout surface pixels
+[xSpoutSurface, ySpoutSurface] = ind2sub(size(spout_surface_mask), find(spout_surface_mask));
+xySpoutSurface = [xSpoutSurface, ySpoutSurface];
 
-spoutInTongueHull = inhull(xySpout, xyTongueSurface, conv_hull_tess, 0);
+% Check that bounding boxes of spout and tongue overlap
+minSpoutXY = min(xySpoutSurface, [], 1)-[1, 1];
+maxSpoutXY = max(xySpoutSurface, [], 1)+[1, 1];
+minTongueXY = min(xyTongueSurface, [], 1);
+maxTongueXY = max(xyTongueSurface, [], 1);
 
-% Check that tongue convex hull actually intersects spout
-if sum(spoutInTongueHull) == 0
+spoutRect = [minSpoutXY, maxSpoutXY - minSpoutXY];
+tongueRect = [minTongueXY, maxTongueXY - minTongueXY];
+
+spoutTongueBBoxOverlap = rectint(spoutRect, tongueRect);
+if spoutTongueBBoxOverlap == 0
     if verbose
-        warning('No occlusion found.')
+        warning('No bbox overlap.')
     end
-    healed_mask = uncrop(tongue_mask, original_mask_size, xlimits, ylimits);
+    healed_mask = original_tongue_mask;
     patch_size = 0;
     spout_close = false;
     return;
 end
 
-convhull_mask = inHullMask(size(tongue_mask), xyTongueSurface, conv_hull_tess, 0);
+spoutInTongueHull = sum(inhull(xySpoutSurface, xyTongueSurface, conv_hull_tess, 0));
+
+% Check that tongue convex hull actually intersects spout
+if spoutInTongueHull == 0
+    if verbose
+        warning('No occlusion found.')
+    end
+    healed_mask = original_tongue_mask;
+    patch_size = 0;
+    spout_close = false;
+    return;
+end
+
+% Check if tongue is actually in front of spout
+%   If tongue is in front of spout, not only the hull, but the tongue mask
+%   itself should have significant intersection.
+tongueOverSpout = sum(spout_mask & tongue_mask, 'all');
+if tongueOverSpout / spoutInTongueHull > 0.5
+    % At least 50% of the spout/tongue hull overlap is actual tongue -
+    % there should be little or no tongue in the spout if it's a real
+    % occlusion, so the tongue is probably actually in front of the spout,
+    % not the other way around.
+    if verbose
+        warning('Reverse occlusion - tongue in front of spout.')
+    end
+    healed_mask = original_tongue_mask;
+    patch_size = 0;
+    spout_close = false;
+    return;
+end
+
+% Get coordinates of spout pixels
+[xSpout, ySpout] = ind2sub(size(spout_mask), find(spout_mask));
+xySpout = [xSpout, ySpout];
+
+[~, convhull_mask, xyHullBoundary] = drawMaskPolygon(xyTongueSurface(conv_hull_tess(:, 1), :), size(tongue_mask), true);
 
 % Get an ordered list of pixels around the edge of the convex hull of
 % tongue
-[xhb, yhb] = getMaskOrdering(getMaskSurface(convhull_mask), [], [-1, 0]);
-xyHullBoundary = [xhb', yhb'];
+% [xhb, yhb] = getMaskOrdering(convhull_surface_mask, [], [-1, 0]);
+% xyHullBoundary = [xhb', yhb'];
 
 % Get pixels that are both in the outer boundary of the tongue convex hull,
 % AND in the spout mask. These pixels should represent the "gap" in the
 % convex hull of the tongue that the spout occludes
 concavityMask = ismember(xyHullBoundary, xySpout, 'rows');
 
-% Compute the coordinates of the "gap" pixels
-xyGap = xyHullBoundary(concavityMask, :);
-
-if isempty(xyGap)
-    healed_mask = uncrop(tongue_mask, original_mask_size, xlimits, ylimits);
+if sum(concavityMask) == 0
+    % No actual gap in tongue hull boundary
+    healed_mask = original_tongue_mask;
     patch_size = 0;
     spout_close = false;
     return;
 end
 
-% Get the coordinates of the N pixels on either side of the "gap", which 
-% will be used to fit a spline
-num_reference_points = 6;  % Number of fitting points
-gapBoundaries = ~concavityMask & logical(conv(concavityMask, ones(1, 1 + num_reference_points), 'same'));
-xyConcavity = xyHullBoundary(gapBoundaries, :);
+% Get hull boundary coordinates with the spout occlusion removed
+xyGapRemoved = xyHullBoundary(~concavityMask, :);
+gapStartIdx = find(concavityMask, 1)-1;
+
+reference_radius = 3; % Number of fitting points on either side of gap
 % Interpolate new values within gap based on points on either side of the
 % gap
-try
-[yGapHealed] = healGap(xyConcavity(:, 1), xyConcavity(:, 2), xyGap(:, 1));
-catch
-    disp('oops')
-end
-xyFit = round([xyGap(:, 1), yGapHealed]);
-% Fit a spline to the gap border points, and use it to predict the outer
-% coordinates of the tongue that are behind the spout
-% try
-%     fitY = pchip(xyConcavity(:, 1), xyConcavity(:, 2), xyGap(:, 1));
-% catch
-%     try
-%         fitY = pchiprot(xyConcavity(:, 1), xyConcavity(:, 2), xyGap(:, 1));
-%     catch
-%         warning('Failed to fit spline - using line instead.');
-%         fitY = xyGap(:, 2);
-%     end
-% end
-% xyFit = [xyGap(:, 1), fitY];
-xyHullBoundary(concavityMask, :) = xyFit;
+xyGapHealed = healGap(xyGapRemoved, gapStartIdx, reference_radius);
 
-try
-    % Use new patched hull boundary to create a patched convex hull mask
-    interp_hull_mask = inHullMask(size(tongue_mask), xyHullBoundary, [], 0);
-catch
-    disp('oops')
-end
+[~, interp_hull_mask, ~] = drawMaskPolygon(xyGapHealed, size(tongue_mask), true);
+
+% % Use new patched hull boundary to create a patched convex hull mask
+% interp_hull_mask = inHullMask(size(tongue_mask), xyHullBoundary, [], 0);
 
 % Restrict the patched hull to the region behind the spout (we don't want
 % to convexify other parts of the tongue)
@@ -190,16 +217,16 @@ else
     spout_close = false;
 end
     
-
 patch_size = sum(healed_mask, 'all') - sum(tongue_mask, 'all');
 
 if debug
-    f = figure;
-    ax1 = subplot(1, 3, 1, 'Parent', f); hold(ax1, 'on');
+    f = figure('units','normalized','outerposition',[0 0 1 1]);
+    nPlots = 5;
+    ax1 = subplot(1, nPlots, 1, 'Parent', f); hold(ax1, 'on');
     plotMask(ax1, tongue_mask);
     plotMask(ax1, spout_mask, 'd');
     title(ax1, 'Original mask');
-    ax2 = subplot(1, 3, 2, 'Parent', f); hold(ax2, 'on');
+    ax2 = subplot(1, nPlots, 2, 'Parent', f); hold(ax2, 'on');
     plotMask(ax2, tongue_mask);
     title(ax2, plot_title);
     plotMask(ax2, spout_mask);
@@ -207,12 +234,32 @@ if debug
     imagesc(convhull_mask', 'Parent', gca, 'AlphaData', 0.1);
     plot(xyHullBoundary(:, 1), xyHullBoundary(:, 2), '-*r');
     plotMask(gca, tongue_surface_mask, 2);
-    plot(xyConcavity(:, 1), xyConcavity(:, 2), 'dk', 'MarkerSize', 15);
+%    plot(xyConcavity(:, 1), xyConcavity(:, 2), 'dk', 'MarkerSize', 15);
     plot(xyHullBoundary(:, 1), xyHullBoundary(:, 2), '--+b', 'MarkerSize', 9);
 
-    ax3 = subplot(1, 3, 3, 'Parent', f);
-    plotMask(ax3, healed_mask);
-    title(ax3, 'Healed mask');
+    ax3 = subplot(1, nPlots, 3);
+    plotMask(ax3, tongue_mask);
+    hold(ax3, 'on');
+    plotMask(ax3, healed_mask & ~tongue_mask, 'filled');
+
+    if ~isempty(video_frame)
+        video_frame = video_frame(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
+
+        ax4 = subplot(1, nPlots, 4);
+        imshow(video_frame', 'Parent', ax4);
+        
+        set(ax4, 'YDir','reverse');
+        
+        ax5 = subplot(1, nPlots, 5);
+        imshow(video_frame', 'Parent', ax5);
+        hold(ax5, 'on');
+        plotMask(ax5, tongue_mask, 1);
+        plotMask(ax5, spout_mask, 1);
+        
+        set(ax5, 'YDir','reverse');
+    end
+
+    linkaxes([ax1, ax2, ax3, ax3]);
 end
 
 healed_mask = uncrop(healed_mask, original_mask_size, xlimits, ylimits);

@@ -33,7 +33,7 @@ snoutShadow = shadow3Mask(tongue_3mask, 3, -1);
 xyz = [x(:), y(:), z(:)];
 [x, y, z] = ind2sub(size(tongue_3mask), find(tongue_3mask));
 xyzTongue = [x, y, z];isInHull = inhull(xyz, xyzTongue, [], 0.1);
-convhull_3mask = zeros(size(tongue_3mask));
+convhull_3mask = false(size(tongue_3mask));
 convhull_3mask(isInHull) = true;
 
 tongue_patch = spoutShadow & snoutShadow & convhull_3mask;
