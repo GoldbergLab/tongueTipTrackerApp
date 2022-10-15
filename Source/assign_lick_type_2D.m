@@ -103,9 +103,10 @@ for i=1:numel(l_sp_struct)
             % added by BSI to take care of 'double-tap'
             if ~isnan(loc2(lickNum))
                 t_stats(vid_licks_ind(lickNum)).spout_contact2 = rw_licks(loc2(lickNum));
-                if lickNum <= numel(rw_licks_offset)
+                % recently edited by BSI (221011)
+                if lickNum <= numel(rw_licks_offset) && loc2(lickNum) <= numel(rw_licks_offset)
                     t_stats(vid_licks_ind(lickNum)).spout_contact_offset2 = rw_licks_offset(loc2(lickNum));
-                elseif lickNum > numel(rw_licks_offset)
+                elseif lickNum > numel(rw_licks_offset) || loc2(lickNum) > numel(rw_licks_offset)
                     t_stats(vid_licks_ind(lickNum)).spout_contact_offset2 = nan;
                 end
             end
