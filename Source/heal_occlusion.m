@@ -25,7 +25,7 @@ function [healed_mask, patch_size, tongue_size, spout_close] = heal_occlusion(to
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ~exist('max_spout_gap', 'var') || isempty(max_spout_gap)
-    max_spout_gap = 5;
+    max_spout_gap = 10;
 end
 if ~exist('debug', 'var') || isempty(debug)
     debug = false;
@@ -56,16 +56,29 @@ if tongue_size < 3
 end
 
 % Crop tongue mask for speed
-[xlimits, ylimits] = getMaskLim(tongue_mask | spout_mask, max_spout_gap);
+[xlimits, ylimits] = getMaskLim(tongue_mask | spout_mask); %, max_spout_gap);
 tongue_mask = tongue_mask(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
 
-% Get coordinate matrices for the whole mask area
-% [x, y] = ndgrid(1:size(tongue_mask, 1), 1:size(tongue_mask, 2));
-% xy = [x(:), y(:)];
+% Find the blobs in the mask
+cc = bwconncomp_sorted(tongue_mask);
 
-% Get coordinates of tongue pixels
-% [xTongue, yTongue] = ind2sub(size(tongue_mask), find(tongue_mask));
-% xyTongue = [xTongue, yTongue];
+% Check if there are multiple blobs in the mask
+if cc.NumObjects > 1
+    % Perform a morphological closing operation with successively larger
+    % structuring elements to try to connect disconnected pieces
+    se_radius = 4;
+    while (cc.NumObjects > 1) && (se_radius < 10)
+        se = strel('disk',se_radius);
+        tongue_mask = imclose(tongue_mask, se);
+        cc = bwconncomp_sorted(tongue_mask);
+        se_radius = se_radius + 1;
+    end
+
+    % If we failed to connect all blobs, remove all but the largest blob
+    if cc.NumObjects > 1
+        tongue_mask(vertcat(cc.PixelIdxList{2:end})) = false;
+    end
+end
 
 % Get mask of the outer edge of the original tongue pixels (includes
 % occlusion indent)
@@ -205,7 +218,7 @@ patched_mask = tongue_mask | (interp_hull_mask & spout_mask);
 % the closure, so we don't close other parts of the tongue.
 dilated_spout_mask = imdilate(spout_mask, ones(max_spout_gap));
 % Close the patched mask
-closed_patched_mask = imclose(patched_mask, ones(max_spout_gap));
+closed_patched_mask = imclose(patched_mask, strel('disk', max_spout_gap));
 % Combine the patched original mask with the closed patch near the spout.
 healed_mask = patched_mask | (dilated_spout_mask & closed_patched_mask);
 
@@ -221,12 +234,16 @@ patch_size = sum(healed_mask, 'all') - sum(tongue_mask, 'all');
 
 if debug
     f = figure('units','normalized','outerposition',[0 0 1 1]);
-    nPlots = 5;
-    ax1 = subplot(1, nPlots, 1, 'Parent', f); hold(ax1, 'on');
+    nPlots = 7;
+    ax0 = subplot(1, nPlots, 1, 'Parent', f); hold(ax0, 'on');
+    plotMask(ax0, tongue_mask);
+    title(ax0, 'Original mask');
+
+    ax1 = subplot(1, nPlots, 2, 'Parent', f); hold(ax1, 'on');
     plotMask(ax1, tongue_mask);
     plotMask(ax1, spout_mask, 'd');
-    title(ax1, 'Original mask');
-    ax2 = subplot(1, nPlots, 2, 'Parent', f); hold(ax2, 'on');
+    title(ax1, 'Original mask + spout');
+    ax2 = subplot(1, nPlots, 3, 'Parent', f); hold(ax2, 'on');
     plotMask(ax2, tongue_mask);
     title(ax2, plot_title);
     plotMask(ax2, spout_mask);
@@ -237,29 +254,32 @@ if debug
 %    plot(xyConcavity(:, 1), xyConcavity(:, 2), 'dk', 'MarkerSize', 15);
     plot(xyHullBoundary(:, 1), xyHullBoundary(:, 2), '--+b', 'MarkerSize', 9);
 
-    ax3 = subplot(1, nPlots, 3);
+    ax3 = subplot(1, nPlots, 4);
     plotMask(ax3, tongue_mask);
     hold(ax3, 'on');
     plotMask(ax3, healed_mask & ~tongue_mask, 'filled');
 
+    ax4 = subplot(1, nPlots, 5);
+    plotMask(ax4, healed_mask);
+
     if ~isempty(video_frame)
         video_frame = video_frame(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
 
-        ax4 = subplot(1, nPlots, 4);
-        imshow(video_frame', 'Parent', ax4);
-        
-        set(ax4, 'YDir','reverse');
-        
-        ax5 = subplot(1, nPlots, 5);
+        ax5 = subplot(1, nPlots, 6);
         imshow(video_frame', 'Parent', ax5);
-        hold(ax5, 'on');
-        plotMask(ax5, tongue_mask, 1);
-        plotMask(ax5, spout_mask, 1);
         
         set(ax5, 'YDir','reverse');
+        
+        ax6 = subplot(1, nPlots, 7);
+        imshow(video_frame', 'Parent', ax6);
+        hold(ax6, 'on');
+        plotMask(ax6, tongue_mask, 1);
+        plotMask(ax6, spout_mask, 1);
+        
+        set(ax6, 'YDir','reverse');
     end
 
-    linkaxes([ax1, ax2, ax3, ax3]);
+    linkaxes([ax0, ax1, ax2, ax3, ax3, ax4]);
 end
 
 healed_mask = uncrop(healed_mask, original_mask_size, xlimits, ylimits);
