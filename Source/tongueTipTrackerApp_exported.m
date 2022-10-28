@@ -3,8 +3,9 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
-        A2OcclusioneditorButton         matlab.ui.control.Button
-        AHealSpoutOcclusionsButton      matlab.ui.control.Button
+        AutorevertoldhealsCheckBox      matlab.ui.control.CheckBox
+        C2OcclusioneditorButton         matlab.ui.control.Button
+        CHealSpoutOcclusionsButton      matlab.ui.control.Button
         RelabelCheckBox                 matlab.ui.control.CheckBox
         DeleteSessionButton             matlab.ui.control.Button
         AddDataTableButton              matlab.ui.control.Button
@@ -22,16 +23,16 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         MaskprocessingLabel             matlab.ui.control.Label
         VideoprocessingLabel            matlab.ui.control.Label
         OverlayMasksCheckBox            matlab.ui.control.CheckBox
-        EIncorporateFPGAdataintotiptracksButton  matlab.ui.control.Button
+        GIncorporateFPGAdataintotiptracksButton  matlab.ui.control.Button
         ClearButton                     matlab.ui.control.Button
         PlotNplickOutputCheckBox        matlab.ui.control.CheckBox
-        CProcessFPGAdataButton          matlab.ui.control.Button
-        BCombineconvertFPGAdatfilesButton  matlab.ui.control.Button
-        DAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
+        BProcessFPGAdataButton          matlab.ui.control.Button
+        ACombineconvertFPGAdatfilesButton  matlab.ui.control.Button
+        FAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
         reloadVideoBrowser              matlab.ui.control.Button
         DryrunCheckBox                  matlab.ui.control.CheckBox
         BLabelvideoswcuelaserButton     matlab.ui.control.Button
-        CGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
+        EGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
         OpenselecteddirectoryButton     matlab.ui.control.Button
         BotSpoutLabel                   matlab.ui.control.Label
         TopSpoutLabel                   matlab.ui.control.Label
@@ -1777,8 +1778,8 @@ end
             app.print('...done labeling avi files with cue and laser')            
         end
 
-        % Button pushed function: CGetlicksegmentationandkinematicsButton
-        function CGetlicksegmentationandkinematicsButtonPushed(app, event)
+        % Button pushed function: EGetlicksegmentationandkinematicsButton
+        function EGetlicksegmentationandkinematicsButtonPushed(app, event)
             saveFlag = true;
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
@@ -1814,8 +1815,8 @@ end
             app.updateVideoBrowser(forceUpdate, lazy);
         end
 
-        % Button pushed function: DAlignFPGAandVideoTrialsButton
-        function DAlignFPGAandVideoTrialsButtonPushed(app, event)
+        % Button pushed function: FAlignFPGAandVideoTrialsButton
+        function FAlignFPGAandVideoTrialsButtonPushed(app, event)
             dataTable = app.getDataTable();
             sessionMaskRoots = dataTable.SessionMaskDirs;
             sessionVideoRoots = dataTable.SessionVideoDirs;
@@ -1852,8 +1853,8 @@ end
             
         end
 
-        % Button pushed function: BCombineconvertFPGAdatfilesButton
-        function BCombineconvertFPGAdatfilesButtonPushed(app, event)
+        % Button pushed function: ACombineconvertFPGAdatfilesButton
+        function ACombineconvertFPGAdatfilesButtonPushed(app, event)
             % Run ppscript for all FPGA data directories
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
@@ -1885,8 +1886,8 @@ end
             app.print('...done combining/converting FPGA data');
         end
 
-        % Button pushed function: CProcessFPGAdataButton
-        function CProcessFPGAdataButtonPushed(app, event)
+        % Button pushed function: BProcessFPGAdataButton
+        function BProcessFPGAdataButtonPushed(app, event)
             app.print('Processing FPGA data...')
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
@@ -1924,8 +1925,8 @@ end
             app.Output.Value = '';
         end
 
-        % Button pushed function: EIncorporateFPGAdataintotiptracksButton
-        function EIncorporateFPGAdataintotiptracksButtonPushed(app, event)
+        % Button pushed function: GIncorporateFPGAdataintotiptracksButton
+        function GIncorporateFPGAdataintotiptracksButtonPushed(app, event)
             app.print('Incorporating FPGA data into tip tracks...')
             dataTable = app.getDataTable();
             sessionMaskRoots = dataTable.SessionMaskDirs;
@@ -2123,8 +2124,8 @@ helpMsg = {...
             end
         end
 
-        % Button pushed function: AHealSpoutOcclusionsButton
-        function AHealSpoutOcclusionsButtonPushed(app, event)
+        % Button pushed function: CHealSpoutOcclusionsButton
+        function CHealSpoutOcclusionsButtonPushed(app, event)
             dataTable = app.getDataTable();
             sessionMaskRoots = dataTable.SessionMaskDirs;
             sessionVideoRoots = dataTable.SessionVideoDirs;
@@ -2142,8 +2143,42 @@ helpMsg = {...
 
 %                      viewSpoutTracking(sessionMaskRoot, sessionVideoRoot, sessionFPGARoot, time_aligned_trial, spout_calibration, cue_frame)
 
+                auto_revert_old_healing = app.AutorevertoldhealsCheckBox.Value;
+                if ~auto_revert_old_healing
+                    % Check if this directory has preexisting occlusion
+                    % healing files
+                    [~, ~, overwrite_warning] = getOcclusionsDirs(sessionMaskRoot);
+                    if overwrite_warning
+                        yesChoice = 'Yes, revert now';
+                        noChoice = 'No, continue (not recommended)';
+                        cancelChoice = 'Cancel occlusion healing session';
+                        answer = questdlg( ...
+                            sprintf(['This directory (%s) appears to already have occlusion healing results'...
+                                '- it is recommended to revert to the original state before re-healing '...
+                                'occlusions. Revert now?'], sessionMaskRoot), ... 
+                                'Revert previous occlusion healing?', ...
+                                yesChoice, noChoice, cancelChoice, yesChoice);
+                        switch answer
+                            case yesChoice
+                                % Revert, then continue
+                                revertOcclusionHealing(sessionMaskRoot);
+                            case noChoice
+                                % Continue without reverting
+                            case {cancelChoice, ''}
+                                % Cancel processing
+                                break;
+                        end
+                    end
+                end
+                tic
                 heal_occlusion_session(sessionMaskRoot, sessionVideoRoot, sessionFPGARoot, time_aligned_trial, spout_calibration, cue_frame);
+                toc
             end
+        end
+
+        % Button pushed function: C2OcclusioneditorButton
+        function C2OcclusioneditorButtonPushed(app, event)
+            
         end
     end
 
@@ -2294,41 +2329,42 @@ helpMsg = {...
 
             % Create TiptrackprocessingLabel
             app.TiptrackprocessingLabel = uilabel(app.UIFigure);
-            app.TiptrackprocessingLabel.Position = [673 522 137 22];
+            app.TiptrackprocessingLabel.Position = [675 604 137 22];
             app.TiptrackprocessingLabel.Text = 'Tip track processing';
 
             % Create VerboseCheckBox
             app.VerboseCheckBox = uicheckbox(app.UIFigure);
             app.VerboseCheckBox.Text = 'Verbose processing';
-            app.VerboseCheckBox.Position = [671 501 137 22];
+            app.VerboseCheckBox.Position = [673 583 137 22];
             app.VerboseCheckBox.Value = true;
 
             % Create MakeMoviesCheckBox
             app.MakeMoviesCheckBox = uicheckbox(app.UIFigure);
             app.MakeMoviesCheckBox.Text = 'Make movies';
-            app.MakeMoviesCheckBox.Position = [671 417 137 22];
+            app.MakeMoviesCheckBox.Position = [673 499 137 22];
 
             % Create PlotKinematicsCheckBox
             app.PlotKinematicsCheckBox = uicheckbox(app.UIFigure);
             app.PlotKinematicsCheckBox.Text = 'Plot kinematics';
-            app.PlotKinematicsCheckBox.Position = [671 459 137 22];
+            app.PlotKinematicsCheckBox.Position = [673 541 137 22];
 
             % Create SaveTrackingDataCheckBox
             app.SaveTrackingDataCheckBox = uicheckbox(app.UIFigure);
             app.SaveTrackingDataCheckBox.Text = 'Save tracking data';
-            app.SaveTrackingDataCheckBox.Position = [671 480 137 22];
+            app.SaveTrackingDataCheckBox.Position = [673 562 137 22];
             app.SaveTrackingDataCheckBox.Value = true;
 
             % Create SaveKinematicsPlotsCheckBox
             app.SaveKinematicsPlotsCheckBox = uicheckbox(app.UIFigure);
             app.SaveKinematicsPlotsCheckBox.Text = 'Save kinematics plots';
-            app.SaveKinematicsPlotsCheckBox.Position = [671 438 137 22];
+            app.SaveKinematicsPlotsCheckBox.Position = [673 520 137 22];
 
             % Create TrackTongueTipsButton
             app.TrackTongueTipsButton = uibutton(app.UIFigure, 'push');
             app.TrackTongueTipsButton.ButtonPushedFcn = createCallbackFcn(app, @TrackTongueTipsButtonPushed, true);
-            app.TrackTongueTipsButton.Position = [671 370 130 42];
-            app.TrackTongueTipsButton.Text = 'B. Track tongue tips';
+            app.TrackTongueTipsButton.Tooltip = {'Run tip tracking on masks to produce tip_track files (each row in struct is a trial)'};
+            app.TrackTongueTipsButton.Position = [669 372 130 42];
+            app.TrackTongueTipsButton.Text = 'D. Track tongue tips';
 
             % Create SaveDataTableButton
             app.SaveDataTableButton = uibutton(app.UIFigure, 'push');
@@ -2377,11 +2413,12 @@ helpMsg = {...
             app.OpenselecteddirectoryButton.Position = [486 217 94 36];
             app.OpenselecteddirectoryButton.Text = {'Open selected'; 'directory'};
 
-            % Create CGetlicksegmentationandkinematicsButton
-            app.CGetlicksegmentationandkinematicsButton = uibutton(app.UIFigure, 'push');
-            app.CGetlicksegmentationandkinematicsButton.ButtonPushedFcn = createCallbackFcn(app, @CGetlicksegmentationandkinematicsButtonPushed, true);
-            app.CGetlicksegmentationandkinematicsButton.Position = [671 321 130 42];
-            app.CGetlicksegmentationandkinematicsButton.Text = {'C. Get lick segmentation'; 'and kinematics'};
+            % Create EGetlicksegmentationandkinematicsButton
+            app.EGetlicksegmentationandkinematicsButton = uibutton(app.UIFigure, 'push');
+            app.EGetlicksegmentationandkinematicsButton.ButtonPushedFcn = createCallbackFcn(app, @EGetlicksegmentationandkinematicsButtonPushed, true);
+            app.EGetlicksegmentationandkinematicsButton.Tooltip = {'Segment tip_track files into separate licks, and calculate various kinematic measures. Store results in t_stats file (each row in struct is a lick)'};
+            app.EGetlicksegmentationandkinematicsButton.Position = [669 321 130 42];
+            app.EGetlicksegmentationandkinematicsButton.Text = {'E. Get lick segmentation'; 'and kinematics'};
 
             % Create BLabelvideoswcuelaserButton
             app.BLabelvideoswcuelaserButton = uibutton(app.UIFigure, 'push');
@@ -2403,30 +2440,31 @@ helpMsg = {...
             app.reloadVideoBrowser.Position = [337 684 25 23];
             app.reloadVideoBrowser.Text = '';
 
-            % Create DAlignFPGAandVideoTrialsButton
-            app.DAlignFPGAandVideoTrialsButton = uibutton(app.UIFigure, 'push');
-            app.DAlignFPGAandVideoTrialsButton.ButtonPushedFcn = createCallbackFcn(app, @DAlignFPGAandVideoTrialsButtonPushed, true);
-            app.DAlignFPGAandVideoTrialsButton.Position = [669 290 268 22];
-            app.DAlignFPGAandVideoTrialsButton.Text = 'D. Align FPGA and Video Trials';
+            % Create FAlignFPGAandVideoTrialsButton
+            app.FAlignFPGAandVideoTrialsButton = uibutton(app.UIFigure, 'push');
+            app.FAlignFPGAandVideoTrialsButton.ButtonPushedFcn = createCallbackFcn(app, @FAlignFPGAandVideoTrialsButtonPushed, true);
+            app.FAlignFPGAandVideoTrialsButton.Tooltip = {'Align FPGA and video trials to produce a mapping between FPGA trial number and video number (sometimes the FPGA may start recording before the video, or vice versa)'};
+            app.FAlignFPGAandVideoTrialsButton.Position = [669 291 268 23];
+            app.FAlignFPGAandVideoTrialsButton.Text = 'F. Align FPGA and Video Trials';
 
-            % Create BCombineconvertFPGAdatfilesButton
-            app.BCombineconvertFPGAdatfilesButton = uibutton(app.UIFigure, 'push');
-            app.BCombineconvertFPGAdatfilesButton.ButtonPushedFcn = createCallbackFcn(app, @BCombineconvertFPGAdatfilesButtonPushed, true);
-            app.BCombineconvertFPGAdatfilesButton.Tooltip = {'Runs ppscript on all FPGA data directories specified'};
-            app.BCombineconvertFPGAdatfilesButton.Position = [809 370 130 42];
-            app.BCombineconvertFPGAdatfilesButton.Text = {'B. Combine/convert '; 'FPGA dat files'};
+            % Create ACombineconvertFPGAdatfilesButton
+            app.ACombineconvertFPGAdatfilesButton = uibutton(app.UIFigure, 'push');
+            app.ACombineconvertFPGAdatfilesButton.ButtonPushedFcn = createCallbackFcn(app, @ACombineconvertFPGAdatfilesButtonPushed, true);
+            app.ACombineconvertFPGAdatfilesButton.Tooltip = {'Runs ppscript on all FPGA data directories specified'};
+            app.ACombineconvertFPGAdatfilesButton.Position = [809 531 130 42];
+            app.ACombineconvertFPGAdatfilesButton.Text = {'A. Combine/convert '; 'FPGA dat files'};
 
-            % Create CProcessFPGAdataButton
-            app.CProcessFPGAdataButton = uibutton(app.UIFigure, 'push');
-            app.CProcessFPGAdataButton.ButtonPushedFcn = createCallbackFcn(app, @CProcessFPGAdataButtonPushed, true);
-            app.CProcessFPGAdataButton.Tooltip = {'Runs nplick_struct on all FPGA data directories specified. Must combine/convert dat files first.'};
-            app.CProcessFPGAdataButton.Position = [809 321 78 42];
-            app.CProcessFPGAdataButton.Text = {'C. Process '; 'FPGA data'};
+            % Create BProcessFPGAdataButton
+            app.BProcessFPGAdataButton = uibutton(app.UIFigure, 'push');
+            app.BProcessFPGAdataButton.ButtonPushedFcn = createCallbackFcn(app, @BProcessFPGAdataButtonPushed, true);
+            app.BProcessFPGAdataButton.Tooltip = {'Runs nplick_struct on all FPGA data directories specified. Must combine/convert dat files first. Produces lick_struct files'};
+            app.BProcessFPGAdataButton.Position = [809 482 78 42];
+            app.BProcessFPGAdataButton.Text = {'B. Process '; 'FPGA data'};
 
             % Create PlotNplickOutputCheckBox
             app.PlotNplickOutputCheckBox = uicheckbox(app.UIFigure);
             app.PlotNplickOutputCheckBox.Text = {'Plot'; 'output'};
-            app.PlotNplickOutputCheckBox.Position = [890 321 55 41];
+            app.PlotNplickOutputCheckBox.Position = [890 482 55 41];
 
             % Create ClearButton
             app.ClearButton = uibutton(app.UIFigure, 'push');
@@ -2434,11 +2472,12 @@ helpMsg = {...
             app.ClearButton.Position = [1008 680 41 22];
             app.ClearButton.Text = 'Clear';
 
-            % Create EIncorporateFPGAdataintotiptracksButton
-            app.EIncorporateFPGAdataintotiptracksButton = uibutton(app.UIFigure, 'push');
-            app.EIncorporateFPGAdataintotiptracksButton.ButtonPushedFcn = createCallbackFcn(app, @EIncorporateFPGAdataintotiptracksButtonPushed, true);
-            app.EIncorporateFPGAdataintotiptracksButton.Position = [669 260 268 22];
-            app.EIncorporateFPGAdataintotiptracksButton.Text = 'E. Incorporate FPGA data into tip tracks';
+            % Create GIncorporateFPGAdataintotiptracksButton
+            app.GIncorporateFPGAdataintotiptracksButton = uibutton(app.UIFigure, 'push');
+            app.GIncorporateFPGAdataintotiptracksButton.ButtonPushedFcn = createCallbackFcn(app, @GIncorporateFPGAdataintotiptracksButtonPushed, true);
+            app.GIncorporateFPGAdataintotiptracksButton.Tooltip = {'Incorporate FPGA data into the t_stats file'};
+            app.GIncorporateFPGAdataintotiptracksButton.Position = [669 261 268 23];
+            app.GIncorporateFPGAdataintotiptracksButton.Text = 'G. Incorporate FPGA data into tip tracks';
 
             % Create OverlayMasksCheckBox
             app.OverlayMasksCheckBox = uicheckbox(app.UIFigure);
@@ -2510,13 +2549,13 @@ helpMsg = {...
             % Create FPGAdataformatDropDownLabel
             app.FPGAdataformatDropDownLabel = uilabel(app.UIFigure);
             app.FPGAdataformatDropDownLabel.HorizontalAlignment = 'right';
-            app.FPGAdataformatDropDownLabel.Position = [807 617 102 22];
+            app.FPGAdataformatDropDownLabel.Position = [809 603 102 22];
             app.FPGAdataformatDropDownLabel.Text = 'FPGA data format';
 
             % Create FPGAdataformatDropDown
             app.FPGAdataformatDropDown = uidropdown(app.UIFigure);
             app.FPGAdataformatDropDown.Items = {'Classic', '2D Fakeout'};
-            app.FPGAdataformatDropDown.Position = [807 596 130 22];
+            app.FPGAdataformatDropDown.Position = [809 582 130 22];
             app.FPGAdataformatDropDown.Value = '2D Fakeout';
 
             % Create MeasuringRulerCheckBox
@@ -2549,16 +2588,25 @@ helpMsg = {...
             app.RelabelCheckBox.Text = 'Relabel';
             app.RelabelCheckBox.Position = [588 531 74 22];
 
-            % Create AHealSpoutOcclusionsButton
-            app.AHealSpoutOcclusionsButton = uibutton(app.UIFigure, 'push');
-            app.AHealSpoutOcclusionsButton.ButtonPushedFcn = createCallbackFcn(app, @AHealSpoutOcclusionsButtonPushed, true);
-            app.AHealSpoutOcclusionsButton.Position = [669 570 268 22];
-            app.AHealSpoutOcclusionsButton.Text = 'A. Heal Spout Occlusions';
+            % Create CHealSpoutOcclusionsButton
+            app.CHealSpoutOcclusionsButton = uibutton(app.UIFigure, 'push');
+            app.CHealSpoutOcclusionsButton.ButtonPushedFcn = createCallbackFcn(app, @CHealSpoutOcclusionsButtonPushed, true);
+            app.CHealSpoutOcclusionsButton.Tooltip = {'Go through masks and attempt to '};
+            app.CHealSpoutOcclusionsButton.Position = [669 449 268 23];
+            app.CHealSpoutOcclusionsButton.Text = 'C. Heal Spout Occlusions';
 
-            % Create A2OcclusioneditorButton
-            app.A2OcclusioneditorButton = uibutton(app.UIFigure, 'push');
-            app.A2OcclusioneditorButton.Position = [669 543 132 22];
-            app.A2OcclusioneditorButton.Text = 'A2. Occlusion editor';
+            % Create C2OcclusioneditorButton
+            app.C2OcclusioneditorButton = uibutton(app.UIFigure, 'push');
+            app.C2OcclusioneditorButton.ButtonPushedFcn = createCallbackFcn(app, @C2OcclusioneditorButtonPushed, true);
+            app.C2OcclusioneditorButton.Position = [669 422 132 23];
+            app.C2OcclusioneditorButton.Text = 'C2. Occlusion editor';
+
+            % Create AutorevertoldhealsCheckBox
+            app.AutorevertoldhealsCheckBox = uicheckbox(app.UIFigure);
+            app.AutorevertoldhealsCheckBox.Tooltip = {'If a session has been healed in the past, automatically revert to the original state before re-healing? If this is unchecked, the process will pause to wait for confirmation before reverting.'};
+            app.AutorevertoldhealsCheckBox.Text = 'Auto-revert old heals';
+            app.AutorevertoldhealsCheckBox.Position = [807 423 133 22];
+            app.AutorevertoldhealsCheckBox.Value = true;
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
