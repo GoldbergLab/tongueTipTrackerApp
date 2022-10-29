@@ -91,15 +91,25 @@ for i=1:numel(l_sp_struct)
         
         for lickNum = 1:numel(t_stats_temp)
           if ~isnan(loc(lickNum))
-              
             t_stats(vid_licks_ind(lickNum)).spout_contact = rw_licks(loc(lickNum));
             t_stats(vid_licks_ind(lickNum)).prev_spcontact = prev_spcontact(loc(lickNum));
-            if loc(lickNum) <= numel(rw_licks_offset)
-                t_stats(vid_licks_ind(lickNum)).spout_contact_offset = rw_licks_offset(loc(lickNum));
+            if loc(lickNum) <= numel(rw_licks_offset)        
+                % rarely the lick sensor may detect the offset as somehow
+                % being after the onset...NaN both onset/offset if so, but
+                % note that this will mess up prev_spcontact.  BSI was not
+                % using prev_spcontact at the time of writing this, and did
+                % not have time to come up with a workaround - but if I NaN
+                % the onset, prev_spcontact has to be from lick n - 1
+                if rw_licks(loc(lickNum)) < rw_licks_offset(loc(lickNum))
+                    t_stats(vid_licks_ind(lickNum)).spout_contact_offset = rw_licks_offset(loc(lickNum));
+                elseif rw_licks(loc(lickNum)) >= rw_licks_offset(loc(lickNum))
+                    t_stats(vid_licks_ind(lickNum)).spout_contact = NaN;
+                    t_stats(vid_licks_ind(lickNum)).spout_contact_offset = NaN;
+                end
             elseif loc(lickNum) > numel(rw_licks_offset)
                 t_stats(vid_licks_ind(lickNum)).spout_contact_offset = nan;
-            end
-
+            end       
+                
             % added by BSI to take care of 'double-tap'
             if ~isnan(loc2(lickNum))
                 t_stats(vid_licks_ind(lickNum)).spout_contact2 = rw_licks(loc2(lickNum));

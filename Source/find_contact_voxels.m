@@ -28,78 +28,81 @@ trial_num = unique([t_stats.trial_num]);
 
 % loop through each trial
 for i = 1:max(trial_num)
-
+    
     % extract data per trial
     t_stats_temp = t_stats([t_stats.trial_num] == i);
+    
+    if ~isempty(t_stats_temp)
 
-    spout_x_mid_temp = spout_x_mid([t_stats.trial_num] == i);
-    spout_x_mid_temp = spout_x_mid_temp{1};
-    
-    spout_z_mid_temp = spout_z_mid([t_stats.trial_num] == i);
-    spout_z_mid_temp = spout_z_mid_temp{1};
-    
-    spout_y_temp = spout_y([t_stats.trial_num] == i);
-    spout_y_temp = spout_y_temp{1};
-    
-    tongue_bot_mask = load(append(sessionMaskRoot, '\', sprintf('Bot_%03d', i-1)));
-    tongue_bot_mask = tongue_bot_mask.mask_pred;
-    
-    tongue_top_mask = load(append(sessionMaskRoot, '\', sprintf('Top_%03d', i-1)));
-    tongue_top_mask = tongue_top_mask.mask_pred;
-    
-    % loop through each lick per trial and filter times when contact occured
-    contact_centroid = cell(size(t_stats_temp));
-    contact_area = cell(size(t_stats_temp));
-    contact_centroid2 = cell(size(t_stats_temp));
-    contact_area2 = cell(size(t_stats_temp));
-    for j = 1:numel(t_stats_temp)  
-        
-        fprintf('Finding contact voxels on Trial %d, Lick %d\n', i, j);
-         
-        if ~isnan(t_stats_temp(j).spout_contact) && ~isnan(t_stats_temp(j).spout_contact_offset)
-            
-            % filter spout location data relative to lick onset/offset
-            spout_x_mid_temp2 = spout_x_mid_temp(t_stats_temp(j).spout_contact:t_stats_temp(j).spout_contact_offset);
-            spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(j).spout_contact:t_stats_temp(j).spout_contact_offset);
-            spout_y_temp2 = spout_y_temp(t_stats_temp(j).spout_contact:t_stats_temp(j).spout_contact_offset);
+        spout_x_mid_temp = spout_x_mid([t_stats.trial_num] == i);
+        spout_x_mid_temp = spout_x_mid_temp{[t_stats_temp.lick_index] == 1};
 
-            tongue_bot_mask_temp = tongue_bot_mask(1000+t_stats_temp(j).spout_contact:1000+t_stats_temp(j).spout_contact_offset, :, :);
-            tongue_top_mask_temp = tongue_top_mask(1000+t_stats_temp(j).spout_contact:1000+t_stats_temp(j).spout_contact_offset, :, :);
+        spout_z_mid_temp = spout_z_mid([t_stats.trial_num] == i);
+        spout_z_mid_temp = spout_z_mid_temp{[t_stats_temp.lick_index] == 1};
 
-            % find tongue-spout distances
-            [contact_centroid_temp, contact_area_temp] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
-        else 
-            contact_centroid_temp = NaN;
-            contact_area_temp = NaN;
+        spout_y_temp = spout_y([t_stats.trial_num] == i);
+        spout_y_temp = spout_y_temp{[t_stats_temp.lick_index] == 1};
+
+        tongue_bot_mask = load(append(sessionMaskRoot, '\', sprintf('Bot_%03d', i-1)));
+        tongue_bot_mask = tongue_bot_mask.mask_pred;
+
+        tongue_top_mask = load(append(sessionMaskRoot, '\', sprintf('Top_%03d', i-1)));
+        tongue_top_mask = tongue_top_mask.mask_pred;
+
+        % loop through each lick per trial and filter times when contact occured
+        contact_centroid = cell(size(t_stats_temp));
+        contact_area = cell(size(t_stats_temp));
+        contact_centroid2 = cell(size(t_stats_temp));
+        contact_area2 = cell(size(t_stats_temp));
+        parfor j = 1:numel(t_stats_temp)  
+
+            fprintf('Finding contact voxels on Trial %d, Lick %d\n', i, j);
+
+            if ~isnan(t_stats_temp(j).spout_contact) && ~isnan(t_stats_temp(j).spout_contact_offset) && (t_stats_temp(j).spout_contact_offset2 - t_stats_temp(j).spout_contact2) >= 5
+
+                % filter spout location data relative to lick onset/offset
+                spout_x_mid_temp2 = spout_x_mid_temp(t_stats_temp(j).spout_contact:t_stats_temp(j).spout_contact_offset);
+                spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(j).spout_contact:t_stats_temp(j).spout_contact_offset);
+                spout_y_temp2 = spout_y_temp(t_stats_temp(j).spout_contact:t_stats_temp(j).spout_contact_offset);
+
+                tongue_bot_mask_temp = tongue_bot_mask(1000+t_stats_temp(j).spout_contact:1000+t_stats_temp(j).spout_contact_offset, :, :);
+                tongue_top_mask_temp = tongue_top_mask(1000+t_stats_temp(j).spout_contact:1000+t_stats_temp(j).spout_contact_offset, :, :);
+                
+                % find tongue-spout distances
+                [contact_centroid_temp, contact_area_temp] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
+            else 
+                contact_centroid_temp = NaN;
+                contact_area_temp = NaN;
+            end
+
+            % repeat for 'double-tap' licks (where a mouse contacts twice on
+            % the same lick)
+            if ~isnan(t_stats_temp(j).spout_contact2) && ~isnan(t_stats_temp(j).spout_contact_offset2) && (t_stats_temp(j).spout_contact_offset2 - t_stats_temp(j).spout_contact2) >= 5
+
+                % filter spout location data relative to lick onset/offset
+                spout_x_mid_temp2 = spout_x_mid_temp(t_stats_temp(j).spout_contact2:t_stats_temp(j).spout_contact_offset2);
+                spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(j).spout_contact2:t_stats_temp(j).spout_contact_offset2);
+                spout_y_temp2 = spout_y_temp(t_stats_temp(j).spout_contact2:t_stats_temp(j).spout_contact_offset2);
+
+                tongue_bot_mask_temp = tongue_bot_mask(1000+t_stats_temp(j).spout_contact2:1000+t_stats_temp(j).spout_contact_offset2, :, :);
+                tongue_top_mask_temp = tongue_top_mask(1000+t_stats_temp(j).spout_contact2:1000+t_stats_temp(j).spout_contact_offset2, :, :);
+
+                % find tongue-spout distances
+                [contact_centroid_temp2, contact_area_temp2] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
+            else 
+                contact_centroid_temp2 = NaN;
+                contact_area_temp2 = NaN;
+            end
+            contact_centroid{j} = contact_centroid_temp;
+            contact_area{j} = contact_area_temp;
+            contact_centroid2{j} = contact_centroid_temp2;
+            contact_area2{j} = contact_area_temp2;
         end
-        
-        % repeat for 'double-tap' licks (where a mouse contacts twice on
-        % the same lick)
-        if ~isnan(t_stats_temp(j).spout_contact2) && ~isnan(t_stats_temp(j).spout_contact_offset2)
-            
-            % filter spout location data relative to lick onset/offset
-            spout_x_mid_temp2 = spout_x_mid_temp(t_stats_temp(j).spout_contact2:t_stats_temp(j).spout_contact_offset2);
-            spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(j).spout_contact2:t_stats_temp(j).spout_contact_offset2);
-            spout_y_temp2 = spout_y_temp(t_stats_temp(j).spout_contact2:t_stats_temp(j).spout_contact_offset2);
-
-            tongue_bot_mask_temp = tongue_bot_mask(1000+t_stats_temp(j).spout_contact2:1000+t_stats_temp(j).spout_contact_offset2, :, :);
-            tongue_top_mask_temp = tongue_top_mask(1000+t_stats_temp(j).spout_contact2:1000+t_stats_temp(j).spout_contact_offset2, :, :);
-
-            % find tongue-spout distances
-            [contact_centroid_temp2, contact_area_temp2] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
-        else 
-            contact_centroid_temp2 = NaN;
-            contact_area_temp2 = NaN;
-        end
-        contact_centroid{j} = contact_centroid_temp;
-        contact_area{j} = contact_area_temp;
-        contact_centroid2{j} = contact_centroid_temp2;
-        contact_area2{j} = contact_area_temp2;
+        [t_stats([t_stats.trial_num] == i).contact_centroid] = contact_centroid{:};
+        [t_stats([t_stats.trial_num] == i).contact_area] = contact_area{:};
+        [t_stats([t_stats.trial_num] == i).contact_centroid2] = contact_centroid2{:};
+        [t_stats([t_stats.trial_num] == i).contact_area2] = contact_area2{:};
     end
-    [t_stats([t_stats.trial_num] == i).contact_centroid] = contact_centroid{:};
-    [t_stats([t_stats.trial_num] == i).contact_area] = contact_area{:};
-    [t_stats([t_stats.trial_num] == i).contact_centroid2] = contact_centroid2{:};
-    [t_stats([t_stats.trial_num] == i).contact_area2] = contact_area2{:};
 end
 
 end
@@ -107,7 +110,7 @@ end
 function [contact_centroid, contact_area] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp)
 
 % initialize contact_centroid
-contact_centroid = zeros(numel(spout_x_mid_temp2), 1);
+contact_centroid = zeros(numel(spout_x_mid_temp2), 3);
 
 % radius of spout width
 radius = spout_width_pix/2;
@@ -193,11 +196,24 @@ for k = 1:numel(spout_x_mid_temp2)
         % the tongue contacts the spout, then find indices.
         dil_scalar_temp = dil_scalar;
         while sum(spout_contact_pts, 'all') == 0
-            dil_scalar_temp = dil_scalar_temp + 5;
-            tongue_contact_pts_box = tongue_contact_pts(ylims(1)-dil_scalar_temp:ylims(2)+dil_scalar_temp, xlims(1)-dil_scalar_temp:xlims(2)+dil_scalar_temp, zlims(1)-dil_scalar_temp:zlims(2)+dil_scalar_temp);
+            dil_scalar_temp = dil_scalar_temp + 10;
+            
+            pos1 = [ylims(1)-dil_scalar_temp xlims(1)-dil_scalar_temp zlims(1)-dil_scalar_temp];
+            pos2 = [ylims(2)+dil_scalar_temp xlims(2)+dil_scalar_temp zlims(2)+dil_scalar_temp];
+            
+            if sum(pos1 < 1) > 0
+                pos1(pos1<1) = 1;
+            end
+
+            pos2_lim = [240 192 144];    
+            if sum(pos2 > pos2_lim) > 0
+                pos2(pos2 > pos2_lim) = pos2_lim(pos2 > pos2_lim);
+            end
+            
+            tongue_contact_pts_box = tongue_contact_pts(pos1(1):pos2(1), pos1(2):pos2(2), pos1(3):pos2(3));
             tongue_3D_box_dilate = imdilate(tongue_contact_pts_box, ones(dil_scalar_temp, dil_scalar_temp, dil_scalar_temp));
             tongue_3D_dilate = false(240, 192, 144);
-            tongue_3D_dilate(ylims(1)-dil_scalar_temp:ylims(2)+dil_scalar_temp, xlims(1)-dil_scalar_temp:xlims(2)+dil_scalar_temp, zlims(1)-dil_scalar_temp:zlims(2)+dil_scalar_temp) = tongue_3D_box_dilate;
+            tongue_3D_dilate(pos1(1):pos2(1), pos1(2):pos2(2), pos1(3):pos2(3)) = tongue_3D_box_dilate;
             spout_contact_pts = spout_3D & tongue_3D_dilate;
         end 
         spout_contact_idx = find(spout_contact_pts);  
@@ -254,17 +270,25 @@ for k = 1:numel(spout_x_mid_temp2)
     end
 end
 
-% interpolate any NaNs in middle of contact duration
+% interpolate any NaNs in middle of contact, if there are any
 area_temp = [tongue_dist{:, 2}];
-area_nan = ~isnan(area_temp);
-area_interp = cumsum(area_nan-diff([1,area_nan])/2);
-contact_area = interp1(1:nnz(area_nan),area_temp(area_nan),area_interp);
+if sum(isnan(area_temp)) > 0 
+    area_nan = ~isnan(area_temp);
+    area_interp = cumsum(area_nan-diff([1,area_nan])/2);
+    contact_area = interp1(1:nnz(area_nan),area_temp(area_nan),area_interp);
+else
+    contact_area = area_temp;
+end
 
 contact_temp = vertcat(tongue_dist{:,1});
-contact_nan = ~isnan(contact_temp);
-for n = 1:size(contact_temp, 2)
-    contact_interp = cumsum(contact_nan(:,n)-diff([1;contact_nan(:,n)])/2);
-    contact_centroid(:,n) = interp1(1:nnz(contact_nan(:,n)),contact_temp(contact_nan(:,n),n),contact_interp);
+if sum(isnan(contact_temp)) > 0
+    contact_nan = ~isnan(contact_temp);
+    for n = 1:size(contact_temp, 2)
+        contact_interp = cumsum(contact_nan(:,n)-diff([1;contact_nan(:,n)])/2);
+        contact_centroid(:,n) = interp1(1:nnz(contact_nan(:,n)),contact_temp(contact_nan(:,n),n),contact_interp);
+    end
+else
+    contact_centroid = contact_temp;
 end
 
 end
