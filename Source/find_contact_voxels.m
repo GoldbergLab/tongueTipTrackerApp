@@ -52,13 +52,13 @@ for i = 1:max(trial_num)
         % loop through each lick per trial and filter times when contact occured
         contact_centroid = cell(size(t_stats_temp));
         contact_area = cell(size(t_stats_temp));
-        contact_centroid2 = cell(size(t_stats_temp));
+        contact_centroid2 = cell(size(t_stats_temp));edit
         contact_area2 = cell(size(t_stats_temp));
         parfor j = 1:numel(t_stats_temp)  
 
             fprintf('Finding contact voxels on Trial %d, Lick %d\n', i, j);
 
-            if ~isnan(t_stats_temp(j).spout_contact) && ~isnan(t_stats_temp(j).spout_contact_offset) && (t_stats_temp(j).spout_contact_offset2 - t_stats_temp(j).spout_contact2) >= 5
+            if ~isnan(t_stats_temp(j).spout_contact) && ~isnan(t_stats_temp(j).spout_contact_offset) && (t_stats_temp(j).spout_contact_offset - t_stats_temp(j).spout_contact) >= 5
 
                 % filter spout location data relative to lick onset/offset
                 spout_x_mid_temp2 = spout_x_mid_temp(t_stats_temp(j).spout_contact:t_stats_temp(j).spout_contact_offset);
