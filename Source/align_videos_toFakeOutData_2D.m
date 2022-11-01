@@ -36,6 +36,7 @@ for sessionNum = 1:numel(sessionVideoRoots)
     t_stats = mapSpoutCommandToPosition(t_stats, spoutPositionCalibrations{sessionNum});
     
     %% Add spout contact voxels
+    fprintf('Finding contact voxels on Session %d\n', sessionNum);
     t_stats = find_contact_voxels(t_stats, sessionMaskRoots{sessionNum});
 
     %% Save the Struct

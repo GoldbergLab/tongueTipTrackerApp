@@ -32,7 +32,7 @@ for i = 1:max(trial_num)
     % extract data per trial
     t_stats_temp = t_stats([t_stats.trial_num] == i);
     
-    if ~isempty(t_stats_temp)
+    if ~isempty(t_stats_temp) && sum([t_stats_temp.lick_index] > 0)
 
         spout_x_mid_temp = spout_x_mid([t_stats.trial_num] == i);
         spout_x_mid_temp = spout_x_mid_temp{[t_stats_temp.lick_index] == 1};
@@ -54,7 +54,7 @@ for i = 1:max(trial_num)
         contact_area = cell(size(t_stats_temp));
         contact_centroid2 = cell(size(t_stats_temp));
         contact_area2 = cell(size(t_stats_temp));
-        for j = 1:numel(t_stats_temp)  
+        parfor j = 1:numel(t_stats_temp)  
 
             fprintf('Finding contact voxels on Trial %d, Lick %d\n', i, j);
 
@@ -102,7 +102,14 @@ for i = 1:max(trial_num)
         [t_stats([t_stats.trial_num] == i).contact_area] = contact_area{:};
         [t_stats([t_stats.trial_num] == i).contact_centroid2] = contact_centroid2{:};
         [t_stats([t_stats.trial_num] == i).contact_area2] = contact_area2{:};
-    end
+
+    elseif ~isempty(t_stats_temp) && sum([t_stats_temp.lick_index] > 0) 
+        nan_temp = num2cell(nan(1, numel(t_stats_temp)));
+        [t_stats([t_stats.trial_num] == i).contact_centroid] = nan_temp{:};
+        [t_stats([t_stats.trial_num] == i).contact_area] = nan_temp{:};
+        [t_stats([t_stats.trial_num] == i).contact_centroid2] = nan_temp{:};
+        [t_stats([t_stats.trial_num] == i).contact_area2] = nan_temp{:};
+    end    
 end
 
 end
@@ -159,7 +166,7 @@ for k = 1:numel(spout_x_mid_temp2)
             tongue_contact_pts = tongue_3D & spout_3D_dilate;
         elseif yshift_scalar_temp >= 35 && radius_temp < 21
             radius_temp = radius_temp + 5;
-            spout_3D_dilate = sqrt((y - spout_x_mid_temp2(k)).^2 + (z - spout_z_mid_temp2(k)).^2) <= (radius + (radius_temp/2)) & (x >= (spout_y_temp2(k) - yshift_scalar) & x <= spout_y_thresh);
+            spout_3D_dilate = sqrt((y - spout_x_mid_temp2(k)).^2 + (z - spout_z_mid_temp2(k)).^2) <= (radius + (radius_temp/2)) & (x >= (spout_y_temp2(k) - yshift_scalar_temp) & x <= spout_y_thresh);
             tongue_contact_pts = tongue_3D & spout_3D_dilate;
         elseif yshift_scalar_temp >= 35 &&  radius_temp > 21
             % this indicates a shitty mask - mark as NaN and interpolate
@@ -272,10 +279,26 @@ end
 
 % interpolate any NaNs in middle of contact, if there are any
 area_temp = [tongue_dist{:, 2}];
+% detect if nan exists
 if sum(isnan(area_temp)) > 0 
     area_nan = ~isnan(area_temp);
-    area_interp = cumsum(area_nan-diff([1,area_nan])/2);
-    contact_area = interp1(1:nnz(area_nan),area_temp(area_nan),area_interp);
+    
+    % if there is more than one real value, and the first and last values
+    % are real, then interpolate the nan as it is in the middle
+    if sum(area_nan) > 1 && area_nan(1) == 0 && area_nan(end) == 0
+        area_interp = cumsum(area_nan-diff([1,area_nan])/2);
+        contact_area = interp1(1:nnz(area_nan),area_temp(area_nan),area_interp);
+        
+    % if there is a nan at the beginning or end of the sequence,
+    % extrapolate that value
+    elseif sum(area_nan) > 1 && (area_nan(1) == 0 || area_nan(end) == 0)
+        area_interp = cumsum(area_nan-diff([1,area_nan])/2);
+        contact_area = interp1(1:nnz(area_nan),area_temp(area_nan),area_interp, 'linear', 'extrap');
+         
+    % any other time, assign all values as nan
+    else
+        contact_area = nan(1,numel(area_temp));
+    end
 else
     contact_area = area_temp;
 end
@@ -283,10 +306,22 @@ end
 contact_temp = vertcat(tongue_dist{:,1});
 if sum(isnan(contact_temp)) > 0
     contact_nan = ~isnan(contact_temp);
-    for n = 1:size(contact_temp, 2)
-        contact_interp = cumsum(contact_nan(:,n)-diff([1;contact_nan(:,n)])/2);
-        contact_centroid(:,n) = interp1(1:nnz(contact_nan(:,n)),contact_temp(contact_nan(:,n),n),contact_interp);
-    end
+    
+    if sum(contact_nan, 'all') > 3 && contact_nan(1) == 0 && contact_nan(end) == 0
+        for n = 1:size(contact_temp, 2)
+            contact_interp = cumsum(contact_nan(:,n)-diff([1;contact_nan(:,n)])/2);
+            contact_centroid(:,n) = interp1(1:nnz(contact_nan(:,n)),contact_temp(contact_nan(:,n),n),contact_interp);
+        end
+        
+    elseif sum(contact_nan, 'all') > 3 && (contact_nan(1) == 0 || contact_nan(end) == 0)
+        for n = 1:size(contact_temp, 2)
+            contact_interp = cumsum(contact_nan(:,n)-diff([1;contact_nan(:,n)])/2);
+            contact_centroid(:,n) = interp1(1:nnz(contact_nan(:,n)),contact_temp(contact_nan(:,n),n),contact_interp, 'linear', 'extrap');
+        end
+        
+    else
+        contact_centroid = nan(size(contact_temp));
+    end 
 else
     contact_centroid = contact_temp;
 end
