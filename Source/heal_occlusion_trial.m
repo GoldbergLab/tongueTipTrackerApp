@@ -9,8 +9,8 @@ if ~exist('videoData', 'var') || isempty(videoData)
 end
 
 % Initialize occlusion report structs
-top_report = [];
-bot_report = [];
+top_report = generateOcclusionReportRow();
+bot_report = generateOcclusionReportRow();
 
 % Initialize healed masks
 top_healed_masks = tongue_top_masks;
@@ -38,7 +38,7 @@ for frame_num_since_cue = 1:size(spout_bbox, 1)
 
     top_tongue_mask = tongue_top_masks(:, :, frame);
     bot_tongue_mask = tongue_bot_masks(:, :, frame);
-    
+
     if ~isempty(videoData)
         top_video_frame = squeeze(videoData(1:144, :, frame));
         bot_video_frame = squeeze(videoData(161:end, :, frame));
@@ -55,19 +55,13 @@ for frame_num_since_cue = 1:size(spout_bbox, 1)
     spout_close = top_spout_close && bot_spout_close;
     
     next_report = length(top_report)+1;
-    top_report(next_report).frame = frame;
-    top_report(next_report).tongue_size = top_tongue_size;
-    top_report(next_report).patch_size = top_patch_size;
-    top_report(next_report).spout_close = spout_close;
+    top_report(next_report) = generateOcclusionReportRow(frame, top_tongue_size, top_patch_size, top_spout_close);
     if top_patch_size > 0
         top_healed_masks(frame, :, :) = top_healed_mask;
     end
 
     next_report = length(bot_report)+1;
-    bot_report(next_report).frame = frame;
-    bot_report(next_report).patch_size = bot_patch_size;
-    bot_report(next_report).tongue_size = bot_tongue_size;
-    bot_report(next_report).spout_close = spout_close;
+    bot_report(next_report) = generateOcclusionReportRow(frame, bot_tongue_size, bot_patch_size, bot_spout_close);
     if bot_patch_size > 0
         bot_healed_masks(frame, :, :) = bot_healed_mask;
     end

@@ -2170,15 +2170,27 @@ helpMsg = {...
                         end
                     end
                 end
+                app.print(sprintf('Healing occlusions in masks for session %s...', sessionMaskRoot));
                 tic
                 heal_occlusion_session(sessionMaskRoot, sessionVideoRoot, sessionFPGARoot, time_aligned_trial, spout_calibration, cue_frame);
                 toc
+                app.print('...done healing occlusions');
             end
         end
 
         % Button pushed function: C2OcclusioneditorButton
         function C2OcclusioneditorButtonPushed(app, event)
-            
+            dataTable = app.getDataTable();
+            sessionMaskRoots = dataTable.SessionMaskDirs;
+            sessionVideoRoots = dataTable.SessionVideoDirs;
+
+            if isempty(app.sessionDataTableSelection)
+                session_num = 1;
+            else
+                session_num = app.sessionDataTableSelection(1);
+            end
+            app.print('Opening occlusion browser')
+            occlusionBrowser(sessionMaskRoots{session_num}, sessionVideoRoots{session_num});
         end
     end
 

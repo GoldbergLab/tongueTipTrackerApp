@@ -1,5 +1,4 @@
 function heal_occlusion_session(sessionMaskRoot, sessionVideoRoot, sessionFPGARoot, time_aligned_trial, spout_calibration, cue_frame, revert_old_healing)
-profile on;
 
 if ~exist('cue_frame', 'var') || isempty(cue_frame)
     cue_frame = 1001;
@@ -30,7 +29,7 @@ save_path = sessionMaskRoot;
 
 % Get proper directories for saving occlusion reports and backups of the 
 %   original unhealed masks
-[occlusions_dir, originals_dir, overwrite_warning] = getOcclusionsDirs(save_path);
+[occlusion_reports_dir, original_masks_dir, overwrite_warning] = getOcclusionsDirs(save_path);
 
 if overwrite_warning
     % Pre-existing reports and/or original masks found
@@ -45,14 +44,14 @@ if debug
     videoList = findFilesByRegex(sessionVideoRoot, '.*\.[aA][vV][iI]');
 end
 
-parfor trial_idx = 1:10 %trial_idxs
+parfor trial_idx = trial_idxs
     trial_num = trial_idx - 1;
     if isnan(trial_idx)
         % No lick_struct row corresponding to this video
         continue;
     end
     %% Calculate spout position
-    displayProgress('Trial %d of %d\n', trial_idx, length(trial_idxs), 10);
+    fprintf('Trial %d of %d\n', trial_idx, length(trial_idxs));
 
     % Load bot mask stack
     tongue_bot_name = sprintf('Bot_%03d.mat', trial_num);
@@ -98,59 +97,13 @@ parfor trial_idx = 1:10 %trial_idxs
 %         end
 %     end
     
-    timestamp = now();
+    timestamp = char(datetime('now'));
 
     dryRun = false;
 
     if ~dryRun
-        saveOcclusionResults(top_report_data, top_healed_masks, save_path, occlusions_dir, originals_dir, 'Top', timestamp, tongue_top_path, trial_idx)
-        saveOcclusionResults(bot_report_data, bot_healed_masks, save_path, occlusions_dir, originals_dir, 'Bot', timestamp, tongue_bot_path, trial_idx)
+        saveOcclusionResults(top_report_data, top_healed_masks, save_path, occlusion_reports_dir, original_masks_dir, 'Top', timestamp, tongue_top_path, trial_idx, true)
+        saveOcclusionResults(bot_report_data, bot_healed_masks, save_path, occlusion_reports_dir, original_masks_dir, 'Bot', timestamp, tongue_bot_path, trial_idx, true)
     end
 
 end
-profile off;
-profile viewer;
-
-function saveOcclusionResults(report_data, healed_masks, save_dir, occlusions_dir, originals_dir, view, heal_timestamp, original_mask_path, trial_idx)
-% report_data =         struct containing occlusion report for each frame
-% healed_masks =        healed mask stack to save
-% save_path =           directory in which to save healed masks and report
-% occlusions_dir =      directory in which to move original unhealed masks
-% view =                view name (either "Top" or "Bot")
-% heal_timestamp =      timestamp indicating when healing was done
-% original_mask_path =  path to original mask stack
-% trial_idx =           trial index (in 1-indexed numbering)
-
-trial_num = trial_idx - 1;
-
-if isempty(report_data)
-    return;
-end
-
-% Determine path to move original mask stack file to, to avoid overwriting
-% it
-[~, original_name, original_ext] = fileparts(original_mask_path);
-moved_mask_path = fullfile(originals_dir, [original_name, original_ext]);
-
-% Store info in struct fields
-report.view = view;
-report.heal_timestamp = heal_timestamp;
-report.patched_mask_path = original_mask_path;
-report.unmodified_mask_path = moved_mask_path;
-report.trial_num = trial_num;
-report.trial_idx = trial_idx;
-report.data = report_data;
-healed_name = sprintf('%s_%03d.mat', view, trial_num);
-num_patched = sum([report_data.patch_size] > 0);
-report.num_patched = num_patched;
-report_name = sprintf('%s_%03d_occ-report-%04d.mat', view, trial_num, num_patched);
-
-% Copy original mask stack to originals folder in case we want to revert.
-copyfile(original_mask_path, moved_mask_path);
-
-% Save occlusion report
-save(fullfile(occlusions_dir, report_name), 'report');
-
-% Save healed masks
-mask_pred = healed_masks;  % Legacy naming scheme which code depends on
-save(fullfile(save_dir, healed_name), 'mask_pred');

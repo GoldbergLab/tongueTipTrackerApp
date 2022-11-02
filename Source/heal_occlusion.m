@@ -1,4 +1,4 @@
-function [healed_mask, patch_size, tongue_size, spout_close] = heal_occlusion(tongue_mask, spout_mask, max_spout_gap, debug, plot_title, video_frame)
+function [healed_mask, patch_size, tongue_size, spout_close] = heal_occlusion(tongue_mask, spout_mask, max_spout_gap, debug, plot_title, video_frame, verbose)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % heal_occlusion: Heal a spout occlusion in a 2D tongue mask
 % usage:  healed_mask = heal_occlusion(tongue_mask, spout_mask, 
@@ -12,6 +12,8 @@ function [healed_mask, patch_size, tongue_size, spout_close] = heal_occlusion(to
 %       gap in pixels between an occluding spout and the occluded tongue.
 %    debug is an optional boolean flag indicating whether or not to produce
 %       debugging plots
+%    verbose is an optional boolean flag indicating extra information
+%       about the process should be output
 %
 % This function is designed to "heal" a tongue mask where the tongue was
 %   known to be occluded by the spout.
@@ -33,15 +35,12 @@ end
 if ~exist('plot_title', 'var') || isempty(plot_title)
     plot_title = 'Occlusion healing';
 end
-if ~exist('video_frame', 'var') || isempty('video_frame')
+if ~exist('video_frame', 'var') || isempty(video_frame)
     video_frame = [];
 end
-
-verbose = false;
-
-% Store original mask size, so the masks can be reconstituted at the end
-original_tongue_mask = tongue_mask;
-original_mask_size = size(tongue_mask);
+if ~exist('verbose', 'var') || isempty(verbose)
+    verbose = false;
+end
 
 % Check that there is a tongue
 tongue_size = sum(tongue_mask, 'all');
@@ -54,6 +53,10 @@ if tongue_size < 3
     spout_close = false;
     return;
 end
+
+% Store original mask size, so the masks can be reconstituted at the end
+original_tongue_mask = tongue_mask;
+original_mask_size = size(tongue_mask);
 
 % Crop tongue mask for speed
 [xlimits, ylimits] = getMaskLim(tongue_mask | spout_mask); %, max_spout_gap);
@@ -94,7 +97,7 @@ try
     conv_hull_tess = [conv_hull_tess(1:end-1), conv_hull_tess(2:end)];
 catch ME
     switch ME.identifier
-        case {'MATLAB:qhullmx:DegenerateData', 'MATLAB:convhull:EmptyConvhull2DErrId'}
+        case {'MATLAB:qhullmx:DegenerateData', 'MATLAB:convhull:EmptyConvhull2DErrId', 'MATLAB:convhull:NotEnoughPtsConvhullErrId'}
             conv_hull_tess = [];
         otherwise
             rethrow(ME);
@@ -114,14 +117,18 @@ end
 % Crop spout mask for speed
 spout_mask = spout_mask(xlimits(1):xlimits(2), ylimits(1):ylimits(2));
 
-spout_surface_mask = getMaskSurface(spout_mask);
-% Get coordinates of spout surface pixels
-[xSpoutSurface, ySpoutSurface] = ind2sub(size(spout_surface_mask), find(spout_surface_mask));
-xySpoutSurface = [xSpoutSurface, ySpoutSurface];
+% spout_surface_mask = getMaskSurface(spout_mask);
+% % Get coordinates of spout surface pixels
+% [xSpoutSurface, ySpoutSurface] = ind2sub(size(spout_surface_mask), find(spout_surface_mask));
+% xySpoutSurface = [xSpoutSurface, ySpoutSurface];
+
+% Get coordinates of spout pixels
+[xSpout, ySpout] = ind2sub(size(spout_mask), find(spout_mask));
+xySpout = [xSpout, ySpout];
 
 % Check that bounding boxes of spout and tongue overlap
-minSpoutXY = min(xySpoutSurface, [], 1)-[1, 1];
-maxSpoutXY = max(xySpoutSurface, [], 1)+[1, 1];
+minSpoutXY = min(xySpout, [], 1)-[1, 1];
+maxSpoutXY = max(xySpout, [], 1)+[1, 1];
 minTongueXY = min(xyTongueSurface, [], 1);
 maxTongueXY = max(xyTongueSurface, [], 1);
 
@@ -139,7 +146,7 @@ if spoutTongueBBoxOverlap == 0
     return;
 end
 
-spoutInTongueHull = sum(inhull(xySpoutSurface, xyTongueSurface, conv_hull_tess, 0));
+spoutInTongueHull = sum(inhull(xySpout, xyTongueSurface, conv_hull_tess, 0));
 
 % Check that tongue convex hull actually intersects spout
 if spoutInTongueHull == 0
@@ -169,10 +176,6 @@ if tongueOverSpout / spoutInTongueHull > 0.5
     spout_close = false;
     return;
 end
-
-% Get coordinates of spout pixels
-[xSpout, ySpout] = ind2sub(size(spout_mask), find(spout_mask));
-xySpout = [xSpout, ySpout];
 
 [~, convhull_mask, xyHullBoundary] = drawMaskPolygon(xyTongueSurface(conv_hull_tess(:, 1), :), size(tongue_mask), true);
 
@@ -204,9 +207,6 @@ reference_radius = 3; % Number of fitting points on either side of gap
 xyGapHealed = healGap(xyGapRemoved, gapStartIdx, reference_radius);
 
 [~, interp_hull_mask, ~] = drawMaskPolygon(xyGapHealed, size(tongue_mask), true);
-
-% % Use new patched hull boundary to create a patched convex hull mask
-% interp_hull_mask = inHullMask(size(tongue_mask), xyHullBoundary, [], 0);
 
 % Restrict the patched hull to the region behind the spout (we don't want
 % to convexify other parts of the tongue)
