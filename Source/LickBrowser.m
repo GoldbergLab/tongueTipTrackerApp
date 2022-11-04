@@ -10,9 +10,14 @@ classdef LickBrowser < VideoBrowser
         t_stats                 struct                               % t_stats rows
         top_mask                logical
         bot_mask                logical
+        top_shift               double
     end
     methods
-        function obj = LickBrowser(mask_dir, video_dir, trial_num)
+        function obj = LickBrowser(mask_dir, video_dir, trial_num, top_shift)
+            if ~exist('top_shift', 'var') || isempty(top_shift)
+                top_shift = 0;
+            end
+
             disp('Loading video...')
             video_paths = findFilesByRegex(video_dir, '.*\.avi', false, false);
             video_path = video_paths{trial_num};
@@ -32,7 +37,7 @@ classdef LickBrowser < VideoBrowser
             bot_mask = s.mask_pred;
 
             combined_mask = false(size(videoData));
-            combined_mask(:, 1:size(top_mask, 2), :) = top_mask;
+            combined_mask(:, (1+top_shift):(size(top_mask, 2)+top_shift), :) = top_mask;
             combined_mask(:, size(videoData, 2) - size(bot_mask, 2) + 1:end, :) = bot_mask;
             disp('...done');
 
@@ -45,6 +50,8 @@ classdef LickBrowser < VideoBrowser
             obj@VideoBrowser(videoData, 'sum', [], [], title);
 
             obj.VideoAxes.Title.Interpreter = 'none';
+
+            obj.top_shift = top_shift;
 
             obj.top_mask = top_mask;
             obj.bot_mask = bot_mask;
@@ -74,7 +81,7 @@ classdef LickBrowser < VideoBrowser
                 delete(obj.bot_marker);
             else
                 top_x = obj.t_stats(lick_idx).tip_y;
-                top_y = (size(obj.top_mask, 2) + 1) - obj.t_stats(lick_idx).tip_z;
+                top_y = (size(obj.top_mask, 2) + 1) - obj.t_stats(lick_idx).tip_z + obj.top_shift;
                 bot_x = obj.t_stats(lick_idx).tip_y;
                 bot_y = (size(obj.VideoData, 2) - size(obj.bot_mask, 2)) + obj.t_stats(lick_idx).tip_x;
 
