@@ -14,6 +14,13 @@ classdef LickBrowser < VideoBrowser
     end
     methods
         function obj = LickBrowser(mask_dir, video_dir, trial_num, top_shift)
+            % Create a LickBrowser instance
+            %   mask_dir = path to the directory that contains this session's masks
+            %   video_dir = path to the directory that contains this session's videos
+            %   trial_num = the trial number to select from within this session
+            %   top_shift = # of pixels to shift the top mask downward
+            %               within the video frame (optional, default = 0)
+
             if ~exist('top_shift', 'var') || isempty(top_shift)
                 top_shift = 0;
             end
@@ -36,6 +43,8 @@ classdef LickBrowser < VideoBrowser
             s = load(bot_mask_path);
             bot_mask = s.mask_pred;
 
+            % Combine the top and bottom masks into a mask the same size as
+            % the video
             combined_mask = false(size(videoData));
             combined_mask(:, (1+top_shift):(size(top_mask, 2)+top_shift), :) = top_mask;
             combined_mask(:, size(videoData, 2) - size(bot_mask, 2) + 1:end, :) = bot_mask;
