@@ -13,10 +13,14 @@ classdef LickBrowser < VideoBrowser
     end
     methods
         function obj = LickBrowser(mask_dir, video_dir, trial_num)
+            disp('Loading video...')
             video_paths = findFilesByRegex(video_dir, '.*\.avi', false, false);
             video_path = video_paths{trial_num};
+            [~, video_name, ~] = fileparts(video_path);
             videoData = permute(loadVideoData(video_path), [3, 1, 2]);
+            disp('...done');
 
+            disp('Loading masks...')
             top_mask_filename = sprintf('Top_%03d.mat', trial_num-1);
             bot_mask_filename = sprintf('Bot_%03d.mat', trial_num-1);
             top_mask_path = fullfile(mask_dir, top_mask_filename);
@@ -30,12 +34,17 @@ classdef LickBrowser < VideoBrowser
             combined_mask = false(size(videoData));
             combined_mask(:, 1:size(top_mask, 2), :) = top_mask;
             combined_mask(:, size(videoData, 2) - size(bot_mask, 2) + 1:end, :) = bot_mask;
+            disp('...done');
 
-            disp('Overlaying mask...');
+            disp('Overlaying masks...');
             videoData = overlayMask(videoData, combined_mask, [1, 0, 0], 0.8);
             disp('...done');
 
-            obj@VideoBrowser(videoData, 'sum');
+            title = sprintf('%s Trial #%d', video_name, trial_num);
+
+            obj@VideoBrowser(videoData, 'sum', [], [], title);
+
+            obj.VideoAxes.Title.Interpreter = 'none';
 
             obj.top_mask = top_mask;
             obj.bot_mask = bot_mask;
