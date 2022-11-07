@@ -1,18 +1,18 @@
-function t_stats = assign_lick_type(t_stats,l_sp_struct,vid_index)
-for i=1:numel(t_stats)
-    t_stats(i).lick_type = 0;
-    t_stats(i).spout_contact = nan;
+function t_stats = assign_lick_type(t_stats, l_sp_struct, vid_index)
+for lick_idx=1:numel(t_stats)
+    t_stats(lick_idx).lick_type = 0;
+    t_stats(lick_idx).spout_contact = nan;
 end
 
-for i=1:numel(l_sp_struct)
-    vid_trial = find(vid_index==i);
-    rw_licks = l_sp_struct(i).rw_licks;
+for trial_num=1:numel(l_sp_struct)
+    vid_trial = find(vid_index==trial_num);
+    rw_licks = l_sp_struct(trial_num).rw_licks;
     
     if numel(vid_trial) && numel(rw_licks)
         vid_licks_ind = find([t_stats.trial_num] == vid_trial);
         %t_stats(vid_licks_ind).lick_type = zeros(1,numel(vid_licks_ind));
         
-        ts_temp = t_stats(vid_licks_ind);
+        t_stats_temp = t_stats(vid_licks_ind);
         
         loc = [];
         %             for jj = 1:numel(rw_licks)
@@ -24,34 +24,34 @@ for i=1:numel(l_sp_struct)
         %                 end
         %             end
         
-        for jj = 1:numel(ts_temp)            
-            tdiff = rw_licks - ts_temp(jj).time_rel_cue;
+        for lick_idx = 1:numel(t_stats_temp)
+            tdiff = rw_licks - t_stats_temp(lick_idx).time_rel_cue;
             tdiff(tdiff<0) = 1000;
-            tdiff(tdiff>ts_temp(jj).dur) = 1000;
+            tdiff(tdiff>t_stats_temp(lick_idx).dur) = 1000;
             [~,loc_temp] = min(tdiff);
             if numel(loc_temp)>0 && tdiff(loc_temp) ~= 1000
-                loc(jj) = loc_temp(1);
+                loc(lick_idx) = loc_temp(1);
             else
-                loc(jj) = nan;
+                loc(lick_idx) = nan;
             end
         end
         
         flag = 1;
         lick_count = 1;
-        for jj = 1:numel(ts_temp)
-            if (flag == 1) && (~isnan(loc(jj)))
-                t_stats(vid_licks_ind(jj)).lick_type = 1;
+        for lick_idx = 1:numel(t_stats_temp)
+            if (flag == 1) && (~isnan(loc(lick_idx)))
+                t_stats(vid_licks_ind(lick_idx)).lick_type = 1;
                 lick_count = lick_count + 1;
                 flag = 2;
             elseif flag == 2
-                t_stats(vid_licks_ind(jj)).lick_type = lick_count;
+                t_stats(vid_licks_ind(lick_idx)).lick_type = lick_count;
                 lick_count = lick_count + 1;
             end
         end
         
-        for jj = 1:numel(ts_temp)
-          if ~isnan(loc(jj))
-            t_stats(vid_licks_ind(jj)).spout_contact = rw_licks(loc(jj));
+        for lick_idx = 1:numel(t_stats_temp)
+          if ~isnan(loc(lick_idx))
+            t_stats(vid_licks_ind(lick_idx)).spout_contact = rw_licks(loc(lick_idx));
           end
         end
         
