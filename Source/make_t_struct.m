@@ -300,7 +300,9 @@ for sessionNum = 1:numel(sessionDataRoots)
         else
             l_traj = [];
         end
-        t_stats = [t_stats l_traj];
+        if ~isempty(l_traj)
+            t_stats = [t_stats l_traj];
+        end
         clear l_traj;
     end
     
