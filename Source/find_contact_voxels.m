@@ -103,7 +103,7 @@ for i = 1:max(trial_num)
         [t_stats([t_stats.trial_num] == i).contact_centroid2] = contact_centroid2{:};
         [t_stats([t_stats.trial_num] == i).contact_area2] = contact_area2{:};
 
-    elseif ~isempty(t_stats_temp) && sum([t_stats_temp.lick_index] > 0) 
+    elseif isempty(t_stats_temp) || sum([t_stats_temp.lick_index] <= 0) 
         nan_temp = num2cell(nan(1, numel(t_stats_temp)));
         [t_stats([t_stats.trial_num] == i).contact_centroid] = nan_temp{:};
         [t_stats([t_stats.trial_num] == i).contact_area] = nan_temp{:};
