@@ -69,6 +69,9 @@ for sessionNum = 1:numel(sessionVideoRoots)
 
     %% Assign Type of Lick   
     t_stats = assign_lick_type(t_stats,l_sp_struct,video_to_fpga_mapping);
+    t_stats = assign_CSM_SSM(t_stats);
+    t_stats = lick_index_rel2contact(t_stats);
+    t_stats = add_SSM_dur(t_stats);
     t_stats = assign_laser_post_cue(t_stats,l_sp_struct,video_to_fpga_mapping);
     
     %% Save the Struct
