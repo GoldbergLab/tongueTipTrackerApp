@@ -28,6 +28,7 @@ for sessionNum = 1:numel(sessionVideoRoots)
     t_stats = assign_fakeout_type_2D(t_stats,l_sp_struct,vid_index);
     t_stats = assign_CSM_SSM(t_stats);
     t_stats = lick_index_rel2contact(t_stats);
+    t_stats = add_tipM_2D(t_stats);
     t_stats = add_SSM_dur(t_stats);
     t_stats = assign_laser_2D(t_stats, sessionVideoRoots{sessionNum});
 
