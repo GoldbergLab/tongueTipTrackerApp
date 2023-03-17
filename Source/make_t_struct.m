@@ -220,10 +220,13 @@ for sessionNum = 1:numel(sessionDataRoots)
                 catch ME
                     disp(getReport(ME));
                     fprintf('Video #%d: Skipping rest of trial - no volume minima found in lick #%d\n', videoNum, lickNum);
-                    % Delete current incomplete lick row:
-                    l_traj(mm) = [];
+                    % Delete current incomplete lick row: 
+                    %l_traj(mm) = [];
+                    
+                    % BSI Edit 10/11/22
+                    prot_ind = 1;
                     flag=1;
-                    break;
+                    %break;
                 end
                 %Package the trial information/metadata
                 l_traj(mm).time_rel_cue = onsetOffsetPairs(lickNum,1)-cue_onset(videoNum);
