@@ -1,4 +1,4 @@
-function t_stats = find_contact_voxels(t_stats, sessionMaskRoot)
+function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, smoothing)
 
 % load('X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms\t_stats.mat');
 % t_stats_folder = 'X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms';
@@ -69,7 +69,7 @@ for trial_num = 1:max(trial_num)
                 tongue_top_mask_temp = tongue_top_mask(1000+t_stats_temp(lick_idx).spout_contact:1000+t_stats_temp(lick_idx).spout_contact_offset, :, :);
                 
                 % find tongue-spout distances
-                [contact_centroid_temp, contact_area_temp] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
+                [contact_centroid_temp, contact_area_temp] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp, smoothing);
             else 
                 contact_centroid_temp = NaN;
                 contact_area_temp = NaN;
@@ -88,7 +88,7 @@ for trial_num = 1:max(trial_num)
                 tongue_top_mask_temp = tongue_top_mask(1000+t_stats_temp(lick_idx).spout_contact2:1000+t_stats_temp(lick_idx).spout_contact_offset2, :, :);
 
                 % find tongue-spout distances
-                [contact_centroid_temp2, contact_area_temp2] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
+                [contact_centroid_temp2, contact_area_temp2] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp, smoothing);
             else 
                 contact_centroid_temp2 = NaN;
                 contact_area_temp2 = NaN;
@@ -114,7 +114,15 @@ end
 
 end
 
-function [contact_centroid, contact_area] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp)
+function [contact_centroid, contact_area] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp, smoothing)
+
+% Smoothing: How much the 3D tongue should be smoothed before finding the
+%   contact voxels. Omit, [], or 0 gives you no smoothing. Positive integers
+%   indicate the tongue should be smoothed.
+
+if ~exist('smoothing', 'var') || isempty(smoothing)
+    smoothing = 0;
+end
 
 % initialize contact_centroid
 contact_centroid = zeros(numel(spout_x_mid_temp2), 3);
@@ -129,6 +137,12 @@ tongue_dist = cell(numel(spout_x_mid_temp2), 2);
 yshift_scalar = 15;
 dil_scalar = 20;
 dist_thresh = 1;
+
+% If smoothing is desired, pre-calculate the structuring element
+if smoothing > 0
+    se = strel('sphere', smoothing);
+end
+
 for t = 1:numel(spout_x_mid_temp2)
     
     % create the 'dilated' & 'real' 3D spout reconstruction
@@ -150,6 +164,11 @@ for t = 1:numel(spout_x_mid_temp2)
     tongue_top_3D = permute(tongue_top_3D, [3 2 1]);
     tongue_3D = tongue_top_3D & tongue_bot_3D;
     
+    % Smooth the 3D reconstruction
+    if smoothing > 0
+        tongue_3D = imopen(tongue_3D, se);
+    end
+
     % find the contact points between the dilated spout and real tongue
     tongue_contact_pts = tongue_3D & spout_3D_dilate;
     

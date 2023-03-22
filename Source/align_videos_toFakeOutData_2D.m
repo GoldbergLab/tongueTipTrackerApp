@@ -1,4 +1,10 @@
-function [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trial, spoutPositionCalibrations, motorSpeeds)
+function [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trial, spoutPositionCalibrations, motorSpeeds, smoothing)
+
+if ~exist('smoothing', 'var') || isempty(smoothing)
+    % Default is no smoothing
+    smoothing = 0;
+end
+
 % result is either true if the processing completed successfully or a cell array of char arrays describing the error.
 result = true;
 vid_ind_arr = [];
@@ -38,7 +44,7 @@ for sessionNum = 1:numel(sessionVideoRoots)
     
     %% Add spout contact voxels
     fprintf('Finding contact voxels on Session %d\n', sessionNum);
-    t_stats = find_contact_voxels(t_stats, sessionMaskRoots{sessionNum});
+    t_stats = find_contact_voxels(t_stats, sessionMaskRoots{sessionNum}, smoothing);
 
     %% Save the Struct
     save(strcat(sessionMaskRoots{sessionNum},'\t_stats.mat'),'t_stats','l_sp_struct','vid_index');
