@@ -27,7 +27,8 @@ for sessionNum=1:numel(FPGADataRoots)
     try
         load(fullfile(FPGADataRoots{sessionNum},'lick_struct.mat'), 'lick_struct');
     catch e
-        result = ['Failed to load lick_struct.mat at ', fullfile(FPGADataRoots{sessionNum},'lick_struct.mat')];
+        result = sprintf('Failed to load lick_struct.mat at %s', fullfile(FPGADataRoots{sessionNum},'lick_struct.mat'));
+        warning(result);
     end
         
     tdiff_sp{sessionNum} = diff([lick_struct.real_time]);
