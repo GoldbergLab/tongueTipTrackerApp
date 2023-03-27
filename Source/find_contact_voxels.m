@@ -3,6 +3,8 @@ function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, smoothing)
 % If smoothing is desired, pre-calculate the structuring element
 if smoothing > 0
     smoothing_str_el = strel('sphere', smoothing);
+else
+    smoothing_str_el = [];
 end
 
 % load('X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms\t_stats.mat');
@@ -124,7 +126,7 @@ function [contact_centroid, contact_area] = getTongueSpoutDist(spout_width_pix, 
 %   should be smoothed before finding the contact voxels. Omit or [] gives 
 %   you no smoothing. See strel() function
 
-if ~exist('smoothing_strel', 'var') || isempty(smoothing_str_el)
+if ~exist('smoothing_str_el', 'var') || isempty(smoothing_str_el)
     smoothing_str_el = [];
 end
 
