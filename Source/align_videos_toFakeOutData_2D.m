@@ -1,5 +1,9 @@
 function [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trial, spoutPositionCalibrations, motorSpeeds, tongueContactSmoothing)
 
+if ~exist('motorSpeeds', 'var') || isempty(motorSpeeds)
+    motorSpeeds = [];
+end
+
 if ~exist('tongueContactSmoothing', 'var') || isempty(tongueContactSmoothing)
     % Default is no 3D tongue reconstruction smoothing for contact voxel
     % finding purposes
