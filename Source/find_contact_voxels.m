@@ -1,5 +1,4 @@
 function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, smoothing)
-
 % If smoothing is desired, pre-calculate the structuring element
 if smoothing > 0
     smoothing_str_el = strel('sphere', smoothing);
@@ -273,6 +272,14 @@ for t = 1:numel(spout_x_mid_temp2)
         
     elseif isnan(tongue_contact_pts)
         contact_pts = NaN;
+    end
+
+    if debug_output
+        figure; 
+        ax = plot3Mask(tongue_3D_shell); hold(ax, 'on');
+        plot3Mask(ax, overlap_3D);
+        scatter3(ax, contact_pts(:, 1), contact_pts(:, 2), contact_pts(:, 3));
+        disp('done')
     end
     
     % sometimes there is only one contact point
