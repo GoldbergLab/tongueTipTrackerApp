@@ -29,8 +29,16 @@ end
 
 for i=1:numel(l_sp_struct)
     vid_trial = find(vid_index==i);
-    rw_licks = l_sp_struct(i).rw_licks;
-    prev_spcontact = l_sp_struct(i).prev_licks;
+    if isfield(l_sp_struct, 'rw_licks')
+        rw_licks = l_sp_struct(i).rw_licks;
+    else
+        rw_licks = [];
+    end
+    if isfield(l_sp_struct, 'prev_licks')
+        prev_spcontact = l_sp_struct(i).prev_licks;
+    else
+        prev_spcontact = [];
+    end
     
     if numel(vid_trial) && numel(rw_licks)
         vid_licks_ind = find([t_stats.trial_num] == vid_trial);

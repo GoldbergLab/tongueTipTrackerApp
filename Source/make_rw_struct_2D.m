@@ -34,6 +34,8 @@ for i = 1:numel(nl_struct)
             rw_trial_struct(trial_num).analog_lick = analog_lick(rw_cue(j,1):rw_cue(j,2));
             rw_trial_struct(trial_num).actuator1_ML_command = actuator1_ML_command(rw_cue(j,1):rw_cue(j,2));
             rw_trial_struct(trial_num).actuator2_AP_command = actuator2_AP_command(rw_cue(j,1):rw_cue(j,2));
+%             rw_trial_struct(trial_num).rw_licks = [];
+%             rw_trial_struct(trial_num).prev_licks = [];
             
             if(isempty(dispense)==0)
                 
@@ -58,14 +60,14 @@ for i = 1:numel(nl_struct)
                 prev_lick_orig  = prev_lick_orig((licks_in_cue_orig>rw_cue(j,1))&(licks_in_cue_orig<(rw_cue(j,1)+1300)));
                 
                 try
-                    retrival_licks = [licks_in_cue(1)];
+                    retrieval_licks = [licks_in_cue(1)];
                     prev_licks_vect = [prev_lick_orig(1)];
                     k=1;
-                    retrival_ilis=[];
+                    retrieval_ilis=[];
                    
                     while 1
-                        retrival_licks = [retrival_licks licks_in_cue(k+1)];                        
-                        retrival_ilis = [retrival_ilis lick_ili(k)];
+                        retrieval_licks = [retrieval_licks licks_in_cue(k+1)];                        
+                        retrieval_ilis = [retrieval_ilis lick_ili(k)];
                         prev_licks_vect = [prev_licks_vect prev_lick_orig(k+1)];
                         k=k+1;
                         if k == length(lick_ili) + 1
@@ -73,12 +75,12 @@ for i = 1:numel(nl_struct)
                         end
                     end
                     
-                    rw_trial_struct(trial_num).rw_licks = retrival_licks;
-                    rw_trial_struct(trial_num).rw_ili = retrival_ilis;
+                    rw_trial_struct(trial_num).rw_licks = retrieval_licks;
+                    rw_trial_struct(trial_num).rw_ili = retrieval_ilis;
                     rw_trial_struct(trial_num).prev_licks = prev_licks_vect;
                 catch
                    if numel(licks_in_cue)
-                    rw_trial_struct(trial_num).rw_licks = retrival_licks;
+                    rw_trial_struct(trial_num).rw_licks = retrieval_licks;
                     rw_trial_struct(trial_num).prev_licks = prev_licks_vect;%doesnt record if only one lick(dispense)
                    else
                     rw_trial_struct(trial_num).rw_licks = [];
