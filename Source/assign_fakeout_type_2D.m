@@ -1,6 +1,8 @@
-function t_stats = assign_fakeout_type_2D(t_stats,l_sp_struct,vid_index)
+function t_stats = assign_fakeout_type_2D_local(t_stats,l_sp_struct,vid_index)
 for i=1:numel(t_stats)
     t_stats(i).fakeout_trial = nan;
+    t_stats(i).recenter_trial = nan;
+    t_stats(i).spout_pos_seq=[];
 end
 
 % fakeout_act1_ML_opts = sort(unique([l_sp_struct.actuator1_ML]),'descend');
@@ -47,6 +49,16 @@ unique_dist = table2array(unique(dist_table, 'rows'));
 [~, ind] = sort(unique_dist(:, 1));
 unique_dist = unique_dist(ind, :);
 
+% check if recentering happens, assuming the left/right ML commands are
+% never duplicated and numbers of spout locations left/right are always
+% matched
+% if length(unique_dist(:,1)) ~= length(unique(unique_dist(:,1)))
+    %center_ind = find(unique_dist(:,1)==median(unique_dist(:,1)));
+    %recenter_ind = center_ind(find(unique_dist([center_ind],2)==min(unique_dist([center_ind],2))));
+    %recenter_dist=unique_dist(recenter_ind,:);
+    %unique_dist(recenter_ind,:)=[];
+%end
+
 for i=1:numel(l_sp_struct)
     vid_trial = find(vid_index==i);
     
@@ -55,10 +67,32 @@ for i=1:numel(l_sp_struct)
         
         for kk = 1:numel(vid_licks_ind)
             for ll = 1:size(unique_dist, 1)
-                if numel(find(unique_dist(ll, 1) == l_sp_struct(i).actuator1_ML && unique_dist(ll, 2) == l_sp_struct(i).actuator2_AP))
+                if numel(l_sp_struct(i).rw_licks_offset)>=2 ...
+                        & unique_dist(ll, 1) == l_sp_struct(i).actuator1_ML_command(l_sp_struct(i).rw_licks_offset(2)) ...
+                        & unique_dist(ll, 2) == l_sp_struct(i).actuator2_AP_command(l_sp_struct(i).rw_licks_offset(2))
                     t_stats(vid_licks_ind(kk)).fakeout_trial = ll;
                 end
+                if numel(l_sp_struct(i).rw_licks_offset)>=3 ...
+                        & unique_dist(ll, 1) == l_sp_struct(i).actuator1_ML_command(end) ...
+                        & unique_dist(ll, 2) == l_sp_struct(i).actuator2_AP_command(end)
+                    t_stats(vid_licks_ind(kk)).recenter_trial = ll;
+                end
             end
+
+            % Use this code to get a field with a sequence of spout
+            % positions for each trial
+%             dist_table_trial = table([l_sp_struct(i).actuator1_ML_command]', [l_sp_struct(i).actuator2_AP_command]');
+%             dist_table_trial = table2array(unique(dist_table_trial, 'rows','stable'));
+%             temp=[];
+%             for mm = 1:size(dist_table_trial, 1)
+%                 for nn = 1:size(unique_dist, 1)
+%                     if dist_table_trial(mm,1)==unique_dist(nn,1) & dist_table_trial(mm,2)==unique_dist(nn,2)
+%                         %t_stats(vid_licks_ind(kk)).spout_pos_seq=[t_stats(vid_licks_ind(kk)).spout_pos_seq,nn];
+%                         temp=[temp,nn];
+%                     end
+%                 end
+%             end
+%             t_stats(vid_licks_ind(kk)).spout_pos_seq=temp;
         end
     end
     
