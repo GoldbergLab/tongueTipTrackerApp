@@ -1,4 +1,4 @@
-function t_stats = assign_fakeout_type_2D_local(t_stats,l_sp_struct,vid_index)
+function t_stats = assign_fakeout_type_2D(t_stats,l_sp_struct,vid_index)
 for i=1:numel(t_stats)
     t_stats(i).fakeout_trial = nan;
     t_stats(i).recenter_trial = nan;
