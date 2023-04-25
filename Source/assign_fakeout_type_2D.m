@@ -2,7 +2,7 @@ function t_stats = assign_fakeout_type_2D(t_stats,l_sp_struct,vid_index)
 for i=1:numel(t_stats)
     t_stats(i).fakeout_trial = nan;
     t_stats(i).recenter_trial = nan;
-    t_stats(i).spout_pos_seq=[];
+    %t_stats(i).spout_pos_seq=[];
 end
 
 % fakeout_act1_ML_opts = sort(unique([l_sp_struct.actuator1_ML]),'descend');
@@ -43,7 +43,8 @@ end
 % end
 
 % this code now assumes no duplicates are present, can take care of this
-% posthoc
+% posthoc. note that for recentering experiments, the recentered position
+% will appear here as well.  
 dist_table = table([l_sp_struct.actuator1_ML]', [l_sp_struct.actuator2_AP]');
 unique_dist = table2array(unique(dist_table, 'rows'));
 [~, ind] = sort(unique_dist(:, 1));
@@ -64,18 +65,47 @@ for i=1:numel(l_sp_struct)
     
     if numel(vid_trial)
         vid_licks_ind = find([t_stats.trial_num] == vid_trial);
-        
+ 
         for kk = 1:numel(vid_licks_ind)
-            for ll = 1:size(unique_dist, 1)
-                if numel(l_sp_struct(i).rw_licks_offset)>=2 ...
-                        & unique_dist(ll, 1) == l_sp_struct(i).actuator1_ML_command(l_sp_struct(i).rw_licks_offset(2)) ...
-                        & unique_dist(ll, 2) == l_sp_struct(i).actuator2_AP_command(l_sp_struct(i).rw_licks_offset(2))
-                    t_stats(vid_licks_ind(kk)).fakeout_trial = ll;
-                end
-                if numel(l_sp_struct(i).rw_licks_offset)>=3 ...
-                        & unique_dist(ll, 1) == l_sp_struct(i).actuator1_ML_command(end) ...
-                        & unique_dist(ll, 2) == l_sp_struct(i).actuator2_AP_command(end)
-                    t_stats(vid_licks_ind(kk)).recenter_trial = ll;
+            if numel(l_sp_struct(i).rw_licks_offset)>=2
+                % calculate number of AP spout positions on a trial
+                num_spout_pos = numel(unique(l_sp_struct(i).actuator2_AP_command));
+
+                % if there's 1 spout position, it is a center trial. 
+                if num_spout_pos == 1
+                    t_stats(vid_licks_ind(kk)).fakeout_trial = 2;
+                    t_stats(vid_licks_ind(kk)).recenter_trial = 0;
+                % if theres 2 spout positions...
+                elseif num_spout_pos == 2
+                    last_spout_pos = l_sp_struct(i).actuator1_ML_command(end);
+                    % and the last ML position is equal to the minimum
+                    % ML distance, you are a left trial.  
+                    if last_spout_pos == min(unique_dist(:, 1))
+                        t_stats(vid_licks_ind(kk)).fakeout_trial = 1;
+                        t_stats(vid_licks_ind(kk)).recenter_trial = 0;
+                    % and the last ML position is equal to the maximum
+                    % of ML distance, you are right trial.
+                    elseif last_spout_pos == max(unique_dist(:, 1))
+                        t_stats(vid_licks_ind(kk)).fakeout_trial = 3;
+                        t_stats(vid_licks_ind(kk)).recenter_trial = 0;
+                    % ... otherwise you are a recentering trial
+                    else
+                        % if one of the ML commands is equal to the
+                        % minimum of ML distance, you are a left trial
+                        if sum(unique(l_sp_struct(i).actuator1_ML_command) == min(unique_dist(:, 1)))
+                            t_stats(vid_licks_ind(kk)).fakeout_trial = 1;
+                            t_stats(vid_licks_ind(kk)).recenter_trial = 1;
+                        % if one of the ML commands is equal to the
+                        % maximum of ML distance, you are a right trial
+                        elseif sum(unique(l_sp_struct(i).actuator1_ML_command) == max(unique_dist(:, 1)))
+                            t_stats(vid_licks_ind(kk)).fakeout_trial = 3;
+                            t_stats(vid_licks_ind(kk)).recenter_trial = 1;
+                        % otherwise, you are a center trial
+                        else
+                            t_stats(vid_licks_ind(kk)).fakeout_trial = 2;
+                            t_stats(vid_licks_ind(kk)).recenter_trial = 1;
+                        end
+                    end
                 end
             end
 

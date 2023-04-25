@@ -63,6 +63,14 @@ function [nl_struct,raster_struct, result] = nplick_struct_2D(dirlist_root, vara
                % Determine Temperature within the Rw_Cue
                try
                    %nl_struct(i).temp(j) = mean(temperature(rw_cue_onset(j):(rw_cue_offset(j)))); %for temperature
+
+                   % Note that this code assigns the spout position at cue
+                   % offset to actuator1_ML and actuator1_AP. This has to
+                   % be done this way, since we don't know the lick number
+                   % here, and can't determine which spout position is the
+                   % 'fakeout' position in recentering experiments. Keep
+                   % this in mind when looking at assign_fakeout_2D down
+                   % the pipeline.  
                    nl_struct(i).actuator1_ML(j) = nl_struct(i).actuator1_ML_command(rw_cue_offset(j)-1); %for fakeout
                    nl_struct(i).actuator2_AP(j) = nl_struct(i).actuator2_AP_command(rw_cue_offset(j)-1);
                catch
