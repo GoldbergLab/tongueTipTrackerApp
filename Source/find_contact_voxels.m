@@ -1,4 +1,4 @@
-function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, params)
+function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, sessionVideoRoot, vid_index, params)
 
 % load('X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms\t_stats.mat');
 % t_stats_folder = 'X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms';
@@ -26,8 +26,16 @@ spout_z_mid = cellfun(@(x) round(144-x-(spout_width_pix/2)), spout_z, 'UniformOu
 % get trial numbers
 trial_num = unique([t_stats.trial_num]);
 
+% get video list
+vid_list = dir(fullfile(sessionVideoRoot, '*.avi'));
+
 % loop through each trial
 for trial_num = 1:max(trial_num)
+    
+    % get cue times from video name
+    trial_vid_temp = vid_list(vid_index(trial_num));
+    trial_vid_name = trial_vid_temp.name;
+    trial_vid_cue_time = str2num(trial_vid_name(regexp(trial_vid_name, '(?<=_C)\d', 'start'):regexp(trial_vid_name, '(?<=_C)\d*', 'end')));
     
     % extract data per trial
     t_stats_temp = t_stats([t_stats.trial_num] == trial_num);
@@ -67,8 +75,9 @@ for trial_num = 1:max(trial_num)
                 spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(lick_idx).spout_contact:t_stats_temp(lick_idx).spout_contact_offset);
                 spout_y_temp2 = spout_y_temp(t_stats_temp(lick_idx).spout_contact:t_stats_temp(lick_idx).spout_contact_offset);
 
-                tongue_bot_mask_temp = tongue_bot_mask(1000+t_stats_temp(lick_idx).spout_contact:1000+t_stats_temp(lick_idx).spout_contact_offset, :, :);
-                tongue_top_mask_temp = tongue_top_mask(1000+t_stats_temp(lick_idx).spout_contact:1000+t_stats_temp(lick_idx).spout_contact_offset, :, :);
+                trial_mask_start_ind = trial_vid_cue_time - 1;    
+                tongue_bot_mask_temp = tongue_bot_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset, :, :);
+                tongue_top_mask_temp = tongue_top_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset, :, :);
                 
                 % find tongue-spout distances
                 [contact_centroid_temp, contact_area_temp] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
@@ -86,8 +95,9 @@ for trial_num = 1:max(trial_num)
                 spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(lick_idx).spout_contact2:t_stats_temp(lick_idx).spout_contact_offset2);
                 spout_y_temp2 = spout_y_temp(t_stats_temp(lick_idx).spout_contact2:t_stats_temp(lick_idx).spout_contact_offset2);
 
-                tongue_bot_mask_temp = tongue_bot_mask(1000+t_stats_temp(lick_idx).spout_contact2:1000+t_stats_temp(lick_idx).spout_contact_offset2, :, :);
-                tongue_top_mask_temp = tongue_top_mask(1000+t_stats_temp(lick_idx).spout_contact2:1000+t_stats_temp(lick_idx).spout_contact_offset2, :, :);
+                trial_mask_start_ind = trial_vid_cue_time - 1;   
+                tongue_bot_mask_temp = tongue_bot_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact2:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset2, :, :);
+                tongue_top_mask_temp = tongue_top_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact2:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset2, :, :);
 
                 % find tongue-spout distances
                 [contact_centroid_temp2, contact_area_temp2] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);

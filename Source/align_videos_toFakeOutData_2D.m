@@ -37,7 +37,7 @@ for sessionNum = 1:numel(sessionVideoRoots)
     
     %% Add spout contact voxels
     fprintf('Finding contact voxels on Session %d\n', sessionNum);
-    t_stats = find_contact_voxels(t_stats, sessionMaskRoots{sessionNum}, params);
+    t_stats = find_contact_voxels(t_stats, sessionMaskRoots{sessionNum}, sessionVideoRoots{sessionNum}, vid_index, params);
 
     %% Save the Struct
     save(strcat(sessionMaskRoots{sessionNum},'\t_stats.mat'),'t_stats','l_sp_struct','vid_index');
