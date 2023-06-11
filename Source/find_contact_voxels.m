@@ -137,7 +137,7 @@ spout_y_thresh = 172;
 tongue_dist = cell(numel(spout_x_mid_temp2), 2);
 [x, y, z] = meshgrid(1:192, 1:240, 1:144);
 yshift_scalar = 15;
-dil_scalar = 20;
+dil_scalar = 10;
 dist_thresh = 1;
 for t = 1:numel(spout_x_mid_temp2)
     
