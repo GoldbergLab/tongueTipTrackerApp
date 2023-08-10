@@ -1871,6 +1871,8 @@ end
                     switch processingPipeline
                         case "Classic"
                             [~, result] = ppscript(sessionFPGARoot, '%f %s %s %s %s %s %s', 7);
+                        case "1D Fakeout"
+                            [~, result] = ppscript(sessionFPGARoot, '%f %s %s %s %s %s %s', 7);
                         case "2D Fakeout"
                             [~, result] = ppscript(sessionFPGARoot, '%f %f %f %s %s %s %s %s %s', 9);
                     end
@@ -1905,6 +1907,8 @@ end
                     switch processingPipeline
                         case "Classic"
                             [nl_struct,raster_struct,result] = nplick_struct(sessionFPGARoot, plotOutput);
+                        case "1D Fakeout"
+                            [nl_struct,raster_struct,result] = nplick_struct_1D(sessionFPGARoot, plotOutput);
                         case "2D Fakeout"
                             [nl_struct,raster_struct,result] = nplick_struct_2D(sessionFPGARoot, plotOutput);                            
                     end
@@ -1938,6 +1942,8 @@ end
             switch processingPipeline
                 case 'Classic'
                     [vid_ind_arr, result] = align_videos_tolickdata(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials);
+                case '1D Fakeout'
+                    [vid_ind_arr, result] = align_videos_toFakeOutData_1D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials);
                 case '2D Fakeout'
                     % Get calibration for spout position
                     spoutCalibrations = {};
@@ -2191,6 +2197,12 @@ helpMsg = {...
             end
             app.print('Opening occlusion browser')
             occlusionBrowser(sessionMaskRoots{session_num}, sessionVideoRoots{session_num});
+        end
+
+        % Value changed function: FPGAdataformatDropDown
+        function FPGAdataformatDropDownValueChanged(app, event)
+            value = app.FPGAdataformatDropDown.Value;
+            
         end
     end
 
@@ -2566,7 +2578,8 @@ helpMsg = {...
 
             % Create FPGAdataformatDropDown
             app.FPGAdataformatDropDown = uidropdown(app.UIFigure);
-            app.FPGAdataformatDropDown.Items = {'Classic', '2D Fakeout'};
+            app.FPGAdataformatDropDown.Items = {'Classic', '1D Fakeout', '2D Fakeout'};
+            app.FPGAdataformatDropDown.ValueChangedFcn = createCallbackFcn(app, @FPGAdataformatDropDownValueChanged, true);
             app.FPGAdataformatDropDown.Position = [809 582 130 22];
             app.FPGAdataformatDropDown.Value = '2D Fakeout';
 
