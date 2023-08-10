@@ -939,7 +939,16 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             app.print('Beginning tongue tip tracking for all sessions.');
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
-            im_shifts = cell2mat(cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false)) - cell2mat(cellfun(@str2num, dataTable.Top_Spout_X, 'UniformOutput', false));
+
+            % Extract bottom and top spout positions for all session
+            bot_spout_positions = cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false);
+            top_spout_positions = cellfun(@str2num, dataTable.Top_Spout_X, 'UniformOutput', false);
+
+            % Take mode of the difference of the spout positions for each
+            % session to get the im_shifts (using the mode in case there
+            % are slightly different calculated im_shifts for different
+            % spout positions within a session)
+            im_shifts = cellfun(@(x, y)mode(x-y), bot_spout_positions, top_spout_positions);
 
             verboseFlag = app.VerboseCheckBox.Value;
 %             makeMovieFlag = app.MakeMoviesCheckBox.Value;
