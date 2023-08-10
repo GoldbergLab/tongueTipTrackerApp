@@ -3,66 +3,66 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
-        ImageAxes                       matlab.ui.control.UIAxes
-        SessionDataTable                matlab.ui.control.Table
-        FrameLabel                      matlab.ui.control.Label
-        FrameSlider                     matlab.ui.control.Slider
-        AddSessionButton                matlab.ui.control.Button
-        VideoBrowser                    matlab.ui.container.Tree
-        VideoBrowserLabel               matlab.ui.control.Label
-        LoadVideoButton                 matlab.ui.control.Button
-        FindDirectoryButton             matlab.ui.control.Button
-        ShowCrosshairCheckBox           matlab.ui.control.CheckBox
-        MarkerInstructionLabel          matlab.ui.control.Label
-        ShowMarkersCheckBox             matlab.ui.control.CheckBox
-        CurrentVideoLabel               matlab.ui.control.Label
-        OutputLabel_2                   matlab.ui.control.Label
-        Output                          matlab.ui.control.TextArea
-        TongueTipTrackerLabel           matlab.ui.control.Label
-        AConvertCINEstoAVIsButton       matlab.ui.control.Button
-        ParallelPoolStateLabel          matlab.ui.control.Label
-        StartParallelPoolButton         matlab.ui.control.Button
-        TiptrackprocessingLabel         matlab.ui.control.Label
-        VerboseCheckBox                 matlab.ui.control.CheckBox
-        MakeMoviesCheckBox              matlab.ui.control.CheckBox
-        PlotKinematicsCheckBox          matlab.ui.control.CheckBox
-        SaveTrackingDataCheckBox        matlab.ui.control.CheckBox
-        SaveKinematicsPlotsCheckBox     matlab.ui.control.CheckBox
-        TrackTongueTipsButton           matlab.ui.control.Button
-        SaveDataTableButton             matlab.ui.control.Button
-        LoadDataTableButton             matlab.ui.control.Button
-        CleartableButton                matlab.ui.control.Button
-        TopFiducialLabel                matlab.ui.control.Label
-        BotFiducialLabel                matlab.ui.control.Label
-        TopSpoutLabel                   matlab.ui.control.Label
-        BotSpoutLabel                   matlab.ui.control.Label
-        OpenselecteddirectoryButton     matlab.ui.control.Button
-        BGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
-        BLabelvideoswcuelaserButton     matlab.ui.control.Button
-        DryrunlabelingCheckBox          matlab.ui.control.CheckBox
-        reloadVideoBrowser              matlab.ui.control.Button
-        CAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
-        ACombineconvertFPGAdatfilesButton  matlab.ui.control.Button
-        BProcessFPGAdataButton          matlab.ui.control.Button
-        PlotNplickOutputCheckBox        matlab.ui.control.CheckBox
-        ClearButton                     matlab.ui.control.Button
-        DIncorporateFPGAdataintotiptracksButton  matlab.ui.control.Button
-        OverlayMasksCheckBox            matlab.ui.control.CheckBox
-        VideoprocessingLabel            matlab.ui.control.Label
-        MaskprocessingLabel             matlab.ui.control.Label
-        FPGAdataprocessingLabel         matlab.ui.control.Label
-        HoverovertheimageandpressLabel  matlab.ui.control.Label
-        cursorPositionLabel             matlab.ui.control.Label
-        HelpButton                      matlab.ui.control.Button
-        SetupsessiondirectoriesLabel    matlab.ui.control.Label
-        ActivateallButton               matlab.ui.control.Button
-        DeactivateallButton             matlab.ui.control.Button
-        FPGAdataformatDropDownLabel     matlab.ui.control.Label
-        FPGAdataformatDropDown          matlab.ui.control.DropDown
-        MeasuringRulerCheckBox          matlab.ui.control.CheckBox
-        SpoutWidthLabel                 matlab.ui.control.Label
-        AddDataTableButton              matlab.ui.control.Button
         DeleteSessionButton             matlab.ui.control.Button
+        AddDataTableButton              matlab.ui.control.Button
+        SpoutWidthLabel                 matlab.ui.control.Label
+        MeasuringRulerCheckBox          matlab.ui.control.CheckBox
+        FPGAdataformatDropDown          matlab.ui.control.DropDown
+        FPGAdataformatDropDownLabel     matlab.ui.control.Label
+        DeactivateallButton             matlab.ui.control.Button
+        ActivateallButton               matlab.ui.control.Button
+        SetupsessiondirectoriesLabel    matlab.ui.control.Label
+        HelpButton                      matlab.ui.control.Button
+        cursorPositionLabel             matlab.ui.control.Label
+        HoverovertheimageandpressLabel  matlab.ui.control.Label
+        FPGAdataprocessingLabel         matlab.ui.control.Label
+        MaskprocessingLabel             matlab.ui.control.Label
+        VideoprocessingLabel            matlab.ui.control.Label
+        OverlayMasksCheckBox            matlab.ui.control.CheckBox
+        DIncorporateFPGAdataintotiptracksButton  matlab.ui.control.Button
+        ClearButton                     matlab.ui.control.Button
+        PlotNplickOutputCheckBox        matlab.ui.control.CheckBox
+        BProcessFPGAdataButton          matlab.ui.control.Button
+        ACombineconvertFPGAdatfilesButton  matlab.ui.control.Button
+        CAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
+        reloadVideoBrowser              matlab.ui.control.Button
+        DryrunlabelingCheckBox          matlab.ui.control.CheckBox
+        BLabelvideoswcuelaserButton     matlab.ui.control.Button
+        BGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
+        OpenselecteddirectoryButton     matlab.ui.control.Button
+        BotSpoutLabel                   matlab.ui.control.Label
+        TopSpoutLabel                   matlab.ui.control.Label
+        BotFiducialLabel                matlab.ui.control.Label
+        TopFiducialLabel                matlab.ui.control.Label
+        CleartableButton                matlab.ui.control.Button
+        LoadDataTableButton             matlab.ui.control.Button
+        SaveDataTableButton             matlab.ui.control.Button
+        TrackTongueTipsButton           matlab.ui.control.Button
+        SaveKinematicsPlotsCheckBox     matlab.ui.control.CheckBox
+        SaveTrackingDataCheckBox        matlab.ui.control.CheckBox
+        PlotKinematicsCheckBox          matlab.ui.control.CheckBox
+        MakeMoviesCheckBox              matlab.ui.control.CheckBox
+        VerboseCheckBox                 matlab.ui.control.CheckBox
+        TiptrackprocessingLabel         matlab.ui.control.Label
+        StartParallelPoolButton         matlab.ui.control.Button
+        ParallelPoolStateLabel          matlab.ui.control.Label
+        AConvertCINEstoAVIsButton       matlab.ui.control.Button
+        TongueTipTrackerLabel           matlab.ui.control.Label
+        Output                          matlab.ui.control.TextArea
+        OutputLabel_2                   matlab.ui.control.Label
+        CurrentVideoLabel               matlab.ui.control.Label
+        ShowMarkersCheckBox             matlab.ui.control.CheckBox
+        MarkerInstructionLabel          matlab.ui.control.Label
+        ShowCrosshairCheckBox           matlab.ui.control.CheckBox
+        FindDirectoryButton             matlab.ui.control.Button
+        LoadVideoButton                 matlab.ui.control.Button
+        VideoBrowserLabel               matlab.ui.control.Label
+        VideoBrowser                    matlab.ui.container.Tree
+        AddSessionButton                matlab.ui.control.Button
+        FrameSlider                     matlab.ui.control.Slider
+        FrameLabel                      matlab.ui.control.Label
+        SessionDataTable                matlab.ui.control.Table
+        ImageAxes                       matlab.ui.control.UIAxes
     end
 
 
@@ -1748,8 +1748,7 @@ end
             app.print('...done labeling avi files with cue and laser')            
         end
 
-        % Button pushed function: 
-        % BGetlicksegmentationandkinematicsButton
+        % Button pushed function: BGetlicksegmentationandkinematicsButton
         function BGetlicksegmentationandkinematicsButtonPushed(app, event)
             saveFlag = true;
             dataTable = app.getDataTable();
@@ -1896,8 +1895,7 @@ end
             app.Output.Value = '';
         end
 
-        % Button pushed function: 
-        % DIncorporateFPGAdataintotiptracksButton
+        % Button pushed function: DIncorporateFPGAdataintotiptracksButton
         function DIncorporateFPGAdataintotiptracksButtonPushed(app, event)
             app.print('Incorporating FPGA data into tip tracks...')
             dataTable = app.getDataTable();
@@ -2113,12 +2111,15 @@ helpMsg = {...
 
             % Create ImageAxes
             app.ImageAxes = uiaxes(app.UIFigure);
-            app.ImageAxes.Box = 'on';
-            app.ImageAxes.BoxStyle = 'full';
             app.ImageAxes.XTick = [];
+            app.ImageAxes.XTickLabelRotation = 0;
             app.ImageAxes.XTickLabel = {'[ ]'};
             app.ImageAxes.YTick = [];
+            app.ImageAxes.YTickLabelRotation = 0;
+            app.ImageAxes.ZTickLabelRotation = 0;
+            app.ImageAxes.BoxStyle = 'full';
             app.ImageAxes.LineWidth = 1;
+            app.ImageAxes.Box = 'on';
             app.ImageAxes.Position = [15 180 223 507];
 
             % Create SessionDataTable
