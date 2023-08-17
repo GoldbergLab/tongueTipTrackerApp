@@ -1,128 +1,118 @@
 function t_stats = assign_fakeout_type_2D(t_stats,l_sp_struct,vid_index)
+
+% Note that, for some sessions, the recentering position can be the center
+% position itself.  For others, it can be closer in AP, but the same in ML.
+%  In other sessions, it can be different in ML (by mistake on the user),
+%  and/or maybe even different in AP (by mistake of the user).  
+
 for i=1:numel(t_stats)
     t_stats(i).fakeout_trial = nan;
     t_stats(i).recenter_trial = nan;
-    %t_stats(i).spout_pos_seq=[];
 end
 
-% fakeout_act1_ML_opts = sort(unique([l_sp_struct.actuator1_ML]),'descend');
-% fakeout_act2_AP_opts = sort(unique([l_sp_struct.actuator2_AP]),'descend');
-% diff_fakeout_act1_ML_dist = diff(fakeout_act1_ML_opts);
-% diff_fakeout_act2_AP_dist = diff(fakeout_act2_AP_opts);
-% 
-% %remove short duplicate distances
-% close_index_ML = find(abs(diff_fakeout_act1_ML_dist)<0.2);
-% close_index_ML = reshape(close_index_ML,1,numel(close_index_ML));
-% close_index_ML(2,:) = close_index_ML(1,:) + 1;
-% 
-% %remove short duplicate distances
-% close_index_AP = find(abs(diff_fakeout_act2_AP_dist)<0.2);
-% close_index_AP = reshape(close_index_AP,1,numel(close_index_AP));
-% close_index_AP(2,:) = close_index_AP(1,:) + 1;
-% 
-% k = 0;
-% for i = 1:numel(fakeout_act1_ML_opts)
-%     isduplicate = find(close_index_ML(2,:) == i);
-%     if isduplicate
-%         fakeout_dist_act1_ML{k} = [fakeout_dist_act1_ML{k} fakeout_act1_ML_opts(i)];
-%     else
-%         k=k+1;
-%         fakeout_dist_act1_ML{k} = [fakeout_act1_ML_opts(i)];
-%     end   
-% end
-% 
-% m = 0;
-% for j = 1:numel(fakeout_act2_AP_opts)
-%     isduplicate = find(close_index_AP(2,:) == j);
-%     if isduplicate
-%         fakeout_dist_act2_AP{m} = [fakeout_dist_act2_AP{m} fakeout_act2_AP_opts(j)];
-%     else
-%         m=m+1;
-%         fakeout_dist_act2_AP{m} = [fakeout_act2_AP_opts(j)];
-%     end   
-% end
-
-% this code now assumes no duplicates are present, can take care of this
-% posthoc. note that for recentering experiments, the recentered position
-% will appear here as well.  
+% get the number of unique spout positions
 dist_table = table([l_sp_struct.actuator1_ML]', [l_sp_struct.actuator2_AP]');
 unique_dist = table2array(unique(dist_table, 'rows'));
 [~, ind] = sort(unique_dist(:, 1));
 unique_dist = unique_dist(ind, :);
 
-% check if recentering happens, assuming the left/right ML commands are
-% never duplicated and numbers of spout locations left/right are always
-% matched
-% if length(unique_dist(:,1)) ~= length(unique(unique_dist(:,1)))
-    %center_ind = find(unique_dist(:,1)==median(unique_dist(:,1)));
-    %recenter_ind = center_ind(find(unique_dist([center_ind],2)==min(unique_dist([center_ind],2))));
-    %recenter_dist=unique_dist(recenter_ind,:);
-    %unique_dist(recenter_ind,:)=[];
-%end
-
-for i=1:numel(l_sp_struct)
+% loop through each trial in lick_struct/l_sp_struct
+for i=11:13%1:numel(l_sp_struct)
+    
+    % find the corresponding video relative to lick_struct trial number
     vid_trial = find(vid_index==i);
     
+    % if there is a video...
     if numel(vid_trial)
+        
+        % find and extract the corresponding trial in t_stats file
         vid_licks_ind = find([t_stats.trial_num] == vid_trial);
- 
-        for kk = 1:numel(vid_licks_ind)
-            if numel(l_sp_struct(i).rw_licks_offset)>=2
-                % calculate number of AP spout positions on a trial
-                num_spout_pos = numel(unique(l_sp_struct(i).actuator2_AP_command));
+      
+        % if there are more than 2 lick offsets
+        if numel(l_sp_struct(i).rw_licks_offset)>=2
 
-                % if there's 1 spout position, it is a center trial. 
-                if num_spout_pos == 1
+            % calculate the number of times the spout moved on a trial
+            ml_spout_pos = l_sp_struct(i).actuator1_ML_command;
+            spout_pos_change = diff(l_sp_struct(i).actuator1_ML_command);
+            num_spout_pos_change = sum((abs(spout_pos_change)) > 0);
+
+            % if this value is zero, then this is a center trial with
+            % no recentering...note that if the recenter spout position is 
+            % the same as the center position, then 'center recenter'
+            % trials are equivalent to center trials.
+            if num_spout_pos_change == 0
+                for kk = 1:numel(vid_licks_ind)
                     t_stats(vid_licks_ind(kk)).fakeout_trial = 2;
                     t_stats(vid_licks_ind(kk)).recenter_trial = 0;
-                % if theres 2 spout positions...
-                elseif num_spout_pos == 2
-                    last_spout_pos = l_sp_struct(i).actuator1_ML_command(end);
-                    % and the last ML position is equal to the minimum
-                    % ML distance, you are a left trial.  
-                    if last_spout_pos == min(unique_dist(:, 1))
-                        t_stats(vid_licks_ind(kk)).fakeout_trial = 1;
-                        t_stats(vid_licks_ind(kk)).recenter_trial = 0;
-                    % and the last ML position is equal to the maximum
-                    % of ML distance, you are right trial.
-                    elseif last_spout_pos == max(unique_dist(:, 1))
+                end
+                
+            % if this value is one, then this could be either a fakeout
+            % or a 'center recenter' trial
+            elseif num_spout_pos_change == 1
+                % since this can be either a 'center recenter' trial, or a
+                % fakeout left/right trial, we need to check the values and
+                % compare them to the min/max of position values...note
+                % that this assumes the 'center recenter' position is
+                % either the same as the center position, or slightly
+                % less/more than the left/right - but not greater than or
+                % equal to the left/right
+                
+                % get the min/max position values in ML
+                min_ML_pos = min(unique_dist(:, 1));
+                max_ML_pos = max(unique_dist(:, 1));
+                
+                % get the time of the first spout change
+                time_spout_pos_change = find(spout_pos_change, 1);
+                
+                % if the derivative is positive, and the ML spout position
+                % is the maximum of all spout positions, then this is a
+                % right trial
+                if spout_pos_change(time_spout_pos_change) > 0 && (ml_spout_pos(time_spout_pos_change + 1) == max_ML_pos)
+                    for kk = 1:numel(vid_licks_ind)
                         t_stats(vid_licks_ind(kk)).fakeout_trial = 3;
                         t_stats(vid_licks_ind(kk)).recenter_trial = 0;
-                    % ... otherwise you are a recentering trial
-                    else
-                        % if one of the ML commands is equal to the
-                        % minimum of ML distance, you are a left trial
-                        if sum(unique(l_sp_struct(i).actuator1_ML_command) == min(unique_dist(:, 1)))
-                            t_stats(vid_licks_ind(kk)).fakeout_trial = 1;
-                            t_stats(vid_licks_ind(kk)).recenter_trial = 1;
-                        % if one of the ML commands is equal to the
-                        % maximum of ML distance, you are a right trial
-                        elseif sum(unique(l_sp_struct(i).actuator1_ML_command) == max(unique_dist(:, 1)))
-                            t_stats(vid_licks_ind(kk)).fakeout_trial = 3;
-                            t_stats(vid_licks_ind(kk)).recenter_trial = 1;
-                        % otherwise, you are a center trial
-                        else
-                            t_stats(vid_licks_ind(kk)).fakeout_trial = 2;
-                            t_stats(vid_licks_ind(kk)).recenter_trial = 1;
-                        end
                     end
-                end
-            end
+                % if the derivative is positive, and the ML spout position
+                % is the maximum of all spout positions, then this is a
+                % right trial
+                elseif spout_pos_change(find(spout_pos_change, 1)) < 0 && (ml_spout_pos(time_spout_pos_change + 1) == min_ML_pos)
+                    for kk = 1:numel(vid_licks_ind)
+                        t_stats(vid_licks_ind(kk)).fakeout_trial = 1;
+                        t_stats(vid_licks_ind(kk)).recenter_trial = 0;
+                    end
+                % otherwise, you are a 'center recenter' trial
+                else
+                    for kk = 1:numel(vid_licks_ind)
+                        t_stats(vid_licks_ind(kk)).fakeout_trial = 2;
+                        t_stats(vid_licks_ind(kk)).recenter_trial = 1;
+                    end
+                end       
+                
+            % if this value is two, then this is both a fakeout and
+            % recentering trial
+            elseif num_spout_pos_change == 2
+                % check the derivative value to see if it's a left or
+                % right recenter trial - ***MIGHT WANT TO ADD A 'FLIP'
+                % BUTTON HERE.  SOME SESSIONS, THIS MIGHT BE DIFFERENT
+                % DEPENDING ON THE MOTOR.
+                
+                % get the time of the first spout change
+                time_spout_pos_change = find(spout_pos_change, 1);
 
-            % Use this code to get a field with a sequence of spout
-            % positions for each trial
-%             dist_table_trial = table([l_sp_struct(i).actuator1_ML_command]', [l_sp_struct(i).actuator2_AP_command]');
-%             dist_table_trial = table2array(unique(dist_table_trial, 'rows','stable'));
-%             temp=[];
-%             for mm = 1:size(dist_table_trial, 1)
-%                 for nn = 1:size(unique_dist, 1)
-%                     if dist_table_trial(mm,1)==unique_dist(nn,1) & dist_table_trial(mm,2)==unique_dist(nn,2)
-%                         %t_stats(vid_licks_ind(kk)).spout_pos_seq=[t_stats(vid_licks_ind(kk)).spout_pos_seq,nn];
-%                         temp=[temp,nn];
-%                     end
-%                 end
-%             end
-%             t_stats(vid_licks_ind(kk)).spout_pos_seq=temp;
+                % if the derivative is positive, this is a right trial
+                if spout_pos_change(time_spout_pos_change) > 0
+                    for kk = 1:numel(vid_licks_ind)
+                        t_stats(vid_licks_ind(kk)).fakeout_trial = 3;
+                        t_stats(vid_licks_ind(kk)).recenter_trial = 1;
+                    end
+                % if the derivative is negative, this is a left trial
+                elseif spout_pos_change(time_spout_pos_change) < 0
+                    for kk = 1:numel(vid_licks_ind)
+                        t_stats(vid_licks_ind(kk)).fakeout_trial = 1;
+                        t_stats(vid_licks_ind(kk)).recenter_trial = 1;
+                    end
+                end                                       
+            end
         end
     end
     
