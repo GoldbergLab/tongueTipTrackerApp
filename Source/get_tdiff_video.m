@@ -6,11 +6,12 @@ for sessionNum=1:numel(sessionVideoRoots)
     for videoNum=1:numel(videoList)
         [~, videoName, ~] = fileparts(videoList(videoNum).name);
         videoNameParts = strsplit(videoName);
-        dateParts = videoNameParts(5:7);
-        hours = str2num(dateParts{1});
-        minutes = str2num(dateParts{2});
-        seconds = str2num(dateParts{3});
-        trial_time(videoNum) = hours/24 + minutes/(24*60)+seconds/(24*60*60);
+        dateParts = videoNameParts(3:7);
+        days = str2num(dateParts{1});
+        hours = str2num(dateParts{3});
+        minutes = str2num(dateParts{4});
+        seconds = str2num(dateParts{5});
+        trial_time(videoNum) = days + hours/24 + minutes/(24*60)+seconds/(24*60*60);
     end
     catch e
         disp(e)
