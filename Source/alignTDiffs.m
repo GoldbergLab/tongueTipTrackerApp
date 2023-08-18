@@ -27,7 +27,7 @@ function startingTrialNums = alignTDiffs(sessionDataRoots, tdiffs_FPGA, tdiffs_V
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 f = figure('Units', 'normalized', 'Position', [0.1, 0, 0.8, 0.85]);
-% Overwritfunce function close callback to prevent user from
+% Overwrite function close callback to prevent user from
 % clicking "x", which would destroy data. User must use
 % "Accept" button instead
 
