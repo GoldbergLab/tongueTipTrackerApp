@@ -992,131 +992,6 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             column = find(strcmp(app.getDataTable(true).Properties.VariableNames, dataField));
         end
 
-        function startingTrialNums = alignTDiffs(app, sessionDataRoots, tdiffs_FPGA, tdiffs_Video)
-            f = figure('Units', 'normalized', 'Position', [0.1, 0, 0.8, 0.85]);
-            % Overwrite function close callback to prevent user from
-            % clicking "x", which would destroy data. User must use
-            % "Accept" button instead
-            function customCloseReqFcn(src, callbackdata)
-                selection = questdlg('Are you sure you want to discard your alignment? Use the ''Accept'' button instead to keep your alignment.',...
-                    'Are you sure?',...
-                    'Yes, discard','No, keep','Yes, discard'); 
-                switch selection 
-                    case 'Yes, discard'
-                        delete(src);
-                    case 'No, keep'
-                        return;
-                end
-            end
-            
-            set(f, 'CloseRequestFcn', @customCloseReqFcn);
-            % Create accept button, which resumes main thread execution
-            % when clicked.
-            acceptButton = uicontrol(f, 'Position',[10 10 200 20],'String','Accept trial alignments','Callback','uiresume(gcbf)');
-%            pan(f, 'xon');
-%            zoom(f, 'xon');
-            tdiffs.FPGA = tdiffs_FPGA;
-            tdiffs.Video = tdiffs_Video;
-
-            sgtitle({'For each session, select the earliest starting trial interval',...
-                     'for FPGA and Video trials so they line up with each other.',...
-                     'Click Accept when done'});
-            
-            f.UserData = struct();
-            f.UserData.seriesList = {'FPGA', 'Video'};
-            f.UserData.faceColors.FPGA = 'g';
-            f.UserData.faceColors.Video = 'c';
-            f.UserData.yVal.FPGA = 0;
-            f.UserData.yVal.Video = 0.5;
-            f.UserData.h = 0.5;
-            for sessionNum = 1:numel(sessionDataRoots)
-                ax(sessionNum) = subplot(numel(sessionDataRoots), 1, sessionNum, 'HitTest', 'off', 'YLimMode', 'manual');
-                hold(ax(sessionNum), 'on');
-                ax(sessionNum).UserData = struct();
-                ax(sessionNum).UserData.selectedRectangle = struct();
-                for seriesNum = 1:numel(f.UserData.seriesList)
-                    % For each series (FPGA and Video), add useful info to
-                    %   axis UserData
-                    series = f.UserData.seriesList{seriesNum};
-                    ax(sessionNum).UserData.sessionNum = sessionNum;
-                    ax(sessionNum).UserData.StartingTrialNum.(series) = 1;
-                    ax(sessionNum).UserData.selectedRectangle.(series) = [];
-                    ax(sessionNum).UserData.rectangles.(series) = matlab.graphics.primitive.Rectangle.empty();
-                    ax(sessionNum).UserData.tdiff.(series) = tdiffs.(series){sessionNum}; %tdiffs_FPGA{sessionNum};
-                    ax(sessionNum).UserData.t.(series) = [0, cumsum(ax(sessionNum).UserData.tdiff.(series))];
-                    
-                    seriesShift = ax(sessionNum).UserData.t.(series)(ax(sessionNum).UserData.StartingTrialNum.(series));
-                    for trialNum = 1:(numel(ax(sessionNum).UserData.t.(series))-1)
-                        % Create rectangles and save handles to axis UserData
-                        rectangleID.trialNum = trialNum;
-                        rectangleID.series = series;
-                        ax(sessionNum).UserData.rectangles.(series)(trialNum) = ...
-                            rectangle(ax(sessionNum), ...
-                                      'Position', [ax(sessionNum).UserData.t.(series)(trialNum) - seriesShift, f.UserData.yVal.(series), ax(sessionNum).UserData.tdiff.(series)(trialNum), f.UserData.h], ...
-                                      'FaceColor', f.UserData.faceColors.(series), ...
-                                      'ButtonDownFcn', @tdiffRectangleCallback, ...
-                                      'UserData', rectangleID);
-                    end
-                    xmaxSeries(seriesNum) = ax(sessionNum).UserData.t.(series)(min([numel(ax(sessionNum).UserData.t.(series)), 15]));
-                end
-                xmax = max(xmaxSeries);
-                xlim(ax(sessionNum), [-0.05*xmax, xmax]);
-%                 plot(ax(sessionNum), 1:numel(tdiff_FPGA), tdiff_FPGA, 1:numel(tdiff_Video), tdiff_Video);
-                title(ax(sessionNum),abbreviateText(sessionDataRoots{sessionNum}, 120), 'Interpreter', 'none', 'HitTest', 'off');
-                yticks(ax(sessionNum), [])
-            end
-            % Waits until accept button is clicked
-            uiwait(f);
-            % If user cancelled alignment, just exit:
-            if ~isvalid(f)
-                startingTrialNums = [];
-                return;
-            end
-            % Collect results from GUI into struct array
-            startingTrialNums = struct();
-            for sessionNum = 1:numel(sessionDataRoots)
-                for seriesNum = 1:numel(f.UserData.seriesList)
-                    series = f.UserData.seriesList{seriesNum};
-                    startingTrialNums(sessionNum).(series) = ax(sessionNum).UserData.StartingTrialNum.(series);
-                end
-            end
-            delete(f)
-        end
-        
-        function [topMaskPath, botMaskPath] = matchMaskToVideo(app, videoName, SessionVideoRoot, SessionMaskRoot)
-            % Strip path and extension from videoname, if present.
-            [~, videoName, ~] = fileparts(videoName);
-            videos = findFilesByRegex(SessionVideoRoot, '.*\.avi$');
-            topMasks = findFilesByRegex(SessionMaskRoot, 'Top_[0-9]*\.mat$');
-            botMasks = findFilesByRegex(SessionMaskRoot, 'Bot_[0-9]*\.mat$');
-
-            if numel(topMasks) ~= numel(botMasks)
-               app.print('Warning: The number of top and bottom masks found do not match...something may be wrong. Check mask file numbering.')
-            elseif numel(topMasks) ~= numel(videos)
-                app.print('Warning: Number of videos found does not match the number of masks. Check the numbering system, directories, etc.')
-            end
-            
-            videoIndex = NaN;
-            for videoNum = 1:numel(videos)
-                [~, videoNameCheck, ~] = fileparts(videos{videoNum});
-                if strcmp(videoName, videoNameCheck)
-                    videoIndex = videoNum;
-                    break;
-                end
-            end
-            if isnan(videoIndex)
-                app.print('Error finding video in video directory...this shouldn''t happen...');
-            end
-            if numel(topMasks) >= videoIndex && numel(botMasks) >= videoIndex
-                topMaskPath = topMasks{videoIndex};
-                botMaskPath = botMasks{videoIndex};
-            else
-                topMaskPath = '';
-                botMaskPath = '';
-                app.print('Error - could not find mask that matches selected video - not enough masks in directory')
-            end
-        end
-
         function [videoHeight, videoWidth] = getSessionVideoFrameSize(app, sessionVideoDir)
             videos = findFilesByRegex(sessionVideoDir, '.*\.avi$');
             % Set up video reader for first video in directory
@@ -1807,7 +1682,7 @@ end
             end
             app.print('Initiating user alignment of FPGA and video trials...');
             app.print('FPGA == green | Video == cyan');
-            startingTrialNums = app.alignTDiffs(sessionMaskRoots, tdiffs_FPGA, tdiffs_Video);
+            startingTrialNums = alignTDiffs(sessionMaskRoots, tdiffs_FPGA, tdiffs_Video);
             if isempty(startingTrialNums)
                 app.print('     ...user alignment of FPGA and video trials cancelled.');
                 return;
