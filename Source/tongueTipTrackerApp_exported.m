@@ -144,9 +144,11 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         
         function populateVideoSessionNode(app, sessionNode)
             videoDir = sessionNode.NodeData;
-            videos = dir(fullfile(videoDir, '*.avi'));
+            videos = findSessionVideos(videoDir);
             for j = 1:numel(videos)
-                uitreenode(sessionNode, 'Text', videos(j).name, 'Tag', 'video', 'NodeData', struct());
+                [~, videoName, videoExt] = fileparts(videos{j});
+                videoFileName = [videoName, videoExt];
+                uitreenode(sessionNode, 'Text', videoFileName, 'Tag', 'video', 'NodeData', struct());
             end
         end
         
@@ -1014,7 +1016,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         function [topMaskPath, botMaskPath] = matchMaskToVideo(app, videoName, SessionVideoRoot, SessionMaskRoot)
             % Strip path and extension from videoname, if present.
             [~, videoName, ~] = fileparts(videoName);
-            videos = findFilesByRegex(SessionVideoRoot, '.*\.avi$');
+            videos = findSessionVideos(SessionVideoRoot);
             topMasks = findFilesByRegex(SessionMaskRoot, 'Top_[0-9]*\.mat$');
             botMasks = findFilesByRegex(SessionMaskRoot, 'Bot_[0-9]*\.mat$');
 
@@ -1046,7 +1048,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         end
 
         function [videoHeight, videoWidth] = getSessionVideoFrameSize(app, sessionVideoDir)
-            videos = findFilesByRegex(sessionVideoDir, '.*\.avi$');
+            videos = findSessionVideos(sessionVideoDir);
             % Set up video reader for first video in directory
             v = VideoReader(videos{1});
             % Get width and height of video (without loading whole video)
@@ -1274,7 +1276,7 @@ end
             % Configure measuring ruler
             try
                 app.measuringRuler = images.roi.Line(app.ImageAxes,'Position',[50, 50; 100, 50], 'Visible', 'off');
-                addlistener(app.measuringRuler, 'Position', 'PostSet', @app.updateRulerLength);
+                addlistener(app.measuringRuler, 'MovingROI', @app.updateRulerLength);
             catch ME
                 app.print('Sorry, ruler does not appear to be available in this version of MATLAB. Upgrade to 2020 or later.')
                 app.measuringRuler = images.roi.Line.empty();
@@ -1709,7 +1711,7 @@ end
             cines = [];
             dataTable = app.getDataTable();
             for k = 1:numel(dataTable.SessionVideoDirs)
-                cines = [cines, findFilesByRegex(dataTable.SessionVideoDirs{k}, '.*\.cine')'];
+                cines = [cines, findSessionVideos(dataTable.SessionVideoDirs{k}, 'cine')'];
             end
             queue = parallel.pool.DataQueue();
             afterEach(queue, @app.print);
