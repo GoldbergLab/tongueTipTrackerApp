@@ -17,7 +17,7 @@ unique_dist = table2array(unique(dist_table, 'rows'));
 unique_dist = unique_dist(ind, :);
 
 % loop through each trial in lick_struct/l_sp_struct
-for i=11:13%1:numel(l_sp_struct)
+for i=1:numel(l_sp_struct)
     
     % find the corresponding video relative to lick_struct trial number
     vid_trial = find(vid_index==i);
