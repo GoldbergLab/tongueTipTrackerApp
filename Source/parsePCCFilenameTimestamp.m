@@ -1,11 +1,16 @@
-function timestamp = parsePCCFilenameTimestamp(path)
+function timestamps = parsePCCFilenameTimestamp(paths)
 % Timestamp parser for PCC (phantom camera control) style filename
 % timestamps, for use with sortFilesByTimestamp function within
 % tongueTipTrackerApp.
-%   path - a char array representing a path containing a PCC-formatted
-%       timestamp
-%   timestamp - a datetime object representing the timestamp parsed from
-%       the path
+%   paths - a char array representing a path containing a PCC-formatted
+%       timestamp, or a cell array of them
+%   timestamps - a datetime array representing the timestamp parsed from
+%       the one or more paths provided
+
+% If only one path was passed, wrap it in a cell array for consistency
+if ischar(paths)
+    paths = {paths};
+end
 
 % Pattern to extract the timestamp portion of the file path
 extractionPattern = '[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]{2} [0-9]{4} [0-9]{2} [0-9]{2} [0-9]{2}\.[0-9]{3}';
@@ -13,24 +18,19 @@ extractionPattern = '[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]{2} [0-9]{4} [0-9]{2} [0-9
 timestampFormat = 'eee MMM dd yyyy HH mm ss.SSS';
 
 % Extract the timestamp portion of the path
-timestampText = regexp(path, extractionPattern, 'match');
+timestampText = regexp(paths, extractionPattern, 'match');
 
-if isempty(timestampText)
-    % Could not find a timestamp in the path
-    timestamp = NaT();
-    warning('No timestamp found within %s', path);
-    return;
-end
+% Only one timestamp per path, so flatten cell array
+timestampText = cellfun(@(x)x{1}, timestampText, 'UniformOutput', false);
 
-% Should be exactly one timestamp, so get it
-timestampText = timestampText{1};
+% Attempt to parse the timestamp into a datetime object
+timestamps = datetime(timestampText, 'InputFormat', timestampFormat);
 
-try
-    % Attempt to parse the timestamp into a datetime object
-    timestamp = datetime(timestampText, 'InputFormat', timestampFormat);
-catch
-    % Timestamp was not parseable for some reason
-    timestamp = NaT;
-    warning('Failed to parse timestamp for %s', path);
-    return;
+% Warn user if any of the paths were not parseable
+if any(isnat(timestamps))
+    warning('The following paths were not parseable as a timestamp:');
+    badPaths = paths(isnat(timestamps));
+    for k = 1:length(badPaths)
+        warning('\t%s', badPaths{k});
+    end
 end
