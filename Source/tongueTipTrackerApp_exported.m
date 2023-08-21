@@ -144,7 +144,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         
         function populateVideoSessionNode(app, sessionNode)
             videoDir = sessionNode.NodeData;
-            videos = findSessionVideos(videoDir);
+            videos = findSessionVideos(videoDir, 'avi', @parsePCCFilenameTimestamp);
             for j = 1:numel(videos)
                 [~, videoName, videoExt] = fileparts(videos{j});
                 videoFileName = [videoName, videoExt];
@@ -1016,7 +1016,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         function [topMaskPath, botMaskPath] = matchMaskToVideo(app, videoName, SessionVideoRoot, SessionMaskRoot)
             % Strip path and extension from videoname, if present.
             [~, videoName, ~] = fileparts(videoName);
-            videos = findSessionVideos(SessionVideoRoot);
+            videos = findSessionVideos(SessionVideoRoot, 'avi', @parsePCCFilenameTimestamp);
             topMasks = findFilesByRegex(SessionMaskRoot, 'Top_[0-9]*\.mat$');
             botMasks = findFilesByRegex(SessionMaskRoot, 'Bot_[0-9]*\.mat$');
 
@@ -1048,7 +1048,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         end
 
         function [videoHeight, videoWidth] = getSessionVideoFrameSize(app, sessionVideoDir)
-            videos = findSessionVideos(sessionVideoDir);
+            videos = findSessionVideos(sessionVideoDir, 'avi', @parsePCCFilenameTimestamp);
             % Set up video reader for first video in directory
             v = VideoReader(videos{1});
             % Get width and height of video (without loading whole video)
@@ -1711,7 +1711,7 @@ end
             cines = [];
             dataTable = app.getDataTable();
             for k = 1:numel(dataTable.SessionVideoDirs)
-                cines = [cines, findSessionVideos(dataTable.SessionVideoDirs{k}, 'cine')'];
+                cines = [cines, findSessionVideos(dataTable.SessionVideoDirs{k}, 'cine', @parsePCCFilenameTimestamp)'];
             end
             queue = parallel.pool.DataQueue();
             afterEach(queue, @app.print);
@@ -1732,7 +1732,7 @@ end
             sessionMaskRoots = dataTable.SessionMaskDirs;
             sessionVideoRoots = dataTable.SessionVideoDirs;
             sessionFPGARoots = dataTable.SessionFPGADirs;
-            [tdiffs_FPGA, tdiffs_Video, result] = get_tdiff_video(sessionVideoRoots, sessionFPGARoots);
+            [tdiffs_FPGA, tdiffs_Video, result] = get_tdiff_video(sessionVideoRoots, sessionFPGARoots, @parsePCCFilenameTimestamp);
             
             if ~islogical(result) || ~result
                 app.print(result);
