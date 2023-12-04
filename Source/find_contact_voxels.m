@@ -1,4 +1,4 @@
-function t_stats = find_contact_voxels(t_stats, sessionMaskRoot)
+function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, params)
 
 % load('X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms\t_stats.mat');
 % t_stats_folder = 'X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms';
@@ -48,6 +48,8 @@ for trial_num = 1:max(trial_num)
 
         tongue_top_mask = load(append(sessionMaskRoot, '\', sprintf('Top_%03d', trial_num-1)));
         tongue_top_mask = tongue_top_mask.mask_pred;
+        
+        [tongue_bot_mask, tongue_top_mask] = processTongueMasks(tongue_bot_mask, tongue_top_mask, params);
 
         % loop through each lick per trial and filter times when contact occured
         contact_centroid = cell(size(t_stats_temp));
