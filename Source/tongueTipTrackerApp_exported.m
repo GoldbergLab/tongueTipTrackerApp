@@ -949,11 +949,6 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
 %             savePlotsFlag = app.SaveKinematicsPlotsCheckBox.Value;
 %             plotFlag = app.PlotKinematicsCheckBox.Value;
             
-            % set up base params
-            baseParams = setTrackParams();
-            baseParams.N_pix_min = 100;
-            baseParams.figPosition = [1921, 41, 1920, 963];
-            
             % If parallel pool hasn't been initialized, initialize it.
             app.StartParallelPoolButtonPushed()
 
@@ -963,8 +958,8 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
                 if verboseFlag
                     app.print(['Processing session #', num2str(j), ': ', sessionDataRoot])
                 end
-                params(j) = baseParams;
-                params(j).im_shift = im_shifts(j);
+                % set up tongue tip tracking params
+                params(j) = setTTTTrackParams(im_shifts(j));
                 
                 % Queue for getting stdout from parfeval functions
                 queue = parallel.pool.DataQueue();
