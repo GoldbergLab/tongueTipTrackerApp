@@ -936,12 +936,24 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
                 app.ParallelPoolStateLabel.Text = {labelTitle, ['Ready - ', num2str(p.NumWorkers), ' workers']};
             end
         end
-        
+
+        function im_shifts = getImShifts(app, dataTable)
+            % Calulate a list of im_shifts from the data table
+            % im_shift is a measure of how much the top view is shifted
+            %   relative to the bottom view due to mirror misalignment, 
+            %   measured in pixels..
+
+            if ~exist('dataTable', 'var')
+                dataTable = app.getDataTable();
+            end
+            im_shifts = cell2mat(cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false)) - cell2mat(cellfun(@str2num, dataTable.Top_Spout_X, 'UniformOutput', false));
+        end
+
         function getTongueTipSessionsTrack(app)
             app.print('Beginning tongue tip tracking for all sessions.');
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
-            im_shifts = cell2mat(cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false)) - cell2mat(cellfun(@str2num, dataTable.Top_Spout_X, 'UniformOutput', false));
+            im_shifts = app.getImShifts(dataTable);
 
             verboseFlag = app.VerboseCheckBox.Value;
 %             makeMovieFlag = app.MakeMoviesCheckBox.Value;
@@ -1853,10 +1865,16 @@ end
                 case '2D Fakeout'
                     % Get calibration for spout position
                     spoutCalibrations = {};
+
+                    % Calculate im_shift for each session
+                    im_shifts = app.getImShifts(dataTable);
+
                     for sessionNum = 1:length(sessionMaskRoots)
                         spoutCalibrations{sessionNum} = app.getSpoutPositionCalibration(sessionNum);
+                        params(sessionNum) = setTTTTrackParams(im_shifts(sessionNum));
                     end
-                    [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials, spoutCalibrations);
+                    motorSpeeds = [];
+                    [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials, spoutCalibrations, motorSpeeds, params);
             end
             
             if ~islogical(result) || ~result
