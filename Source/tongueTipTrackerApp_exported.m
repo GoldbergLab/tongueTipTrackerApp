@@ -936,11 +936,16 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
                 app.ParallelPoolStateLabel.Text = {labelTitle, ['Ready - ', num2str(p.NumWorkers), ' workers']};
             end
         end
-        
-        function getTongueTipSessionsTrack(app)
-            app.print('Beginning tongue tip tracking for all sessions.');
-            dataTable = app.getDataTable();
-            sessionDataRoots = dataTable.SessionMaskDirs;
+
+        function im_shifts = getImShifts(app, dataTable)
+            % Calulate a list of im_shifts from the data table
+            % im_shift is a measure of how much the top view is shifted
+            %   relative to the bottom view due to mirror misalignment, 
+            %   measured in pixels..
+
+            if ~exist('dataTable', 'var')
+                dataTable = app.getDataTable();
+            end
 
             % Extract bottom and top spout positions for all session
             bot_spout_positions = cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false);
@@ -951,6 +956,14 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             % are slightly different calculated im_shifts for different
             % spout positions within a session)
             im_shifts = cellfun(@(x, y)mode(x-y), bot_spout_positions, top_spout_positions);
+        end
+
+        function getTongueTipSessionsTrack(app)
+            app.print('Beginning tongue tip tracking for all sessions.');
+            dataTable = app.getDataTable();
+            sessionDataRoots = dataTable.SessionMaskDirs;
+            
+            im_shifts = app.getImShifts(dataTable);
 
             verboseFlag = app.VerboseCheckBox.Value;
 %             makeMovieFlag = app.MakeMoviesCheckBox.Value;
@@ -1862,10 +1875,16 @@ end
                 case '2D Fakeout'
                     % Get calibration for spout position
                     spoutCalibrations = {};
+
+                    % Calculate im_shift for each session
+                    im_shifts = app.getImShifts(dataTable);
+
                     for sessionNum = 1:length(sessionMaskRoots)
                         spoutCalibrations{sessionNum} = app.getSpoutPositionCalibration(sessionNum);
+                        params(sessionNum) = setTTTTrackParams(im_shifts(sessionNum));
                     end
-                    [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials, spoutCalibrations);
+                    motorSpeeds = [];
+                    [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials, spoutCalibrations, motorSpeeds, params);
             end
             
             if ~islogical(result) || ~result
