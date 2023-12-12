@@ -21,13 +21,13 @@ spout_z = {t_stats.spout_position_z};
 spout_z_mid = cellfun(@(x) round(144-x-(spout_width_pix/2)), spout_z, 'UniformOutput', false);
 
 % get trial numbers
-trial_num = unique([t_stats.trial_num]);
+trial_num_all = unique([t_stats.trial_num]);
 
 % get video list
 vid_list = dir(fullfile(sessionVideoRoot, '*.avi'));
 
 % loop through each trial
-for trial_num = 1:max(trial_num)
+for trial_num = trial_num_all
     
     % get cue times from video name
     trial_vid_temp = vid_list(vid_index(trial_num));
@@ -48,10 +48,10 @@ for trial_num = 1:max(trial_num)
         spout_y_temp = spout_y([t_stats.trial_num] == trial_num);
         spout_y_temp = spout_y_temp{[t_stats_temp.lick_index] == 1};
 
-        tongue_bot_mask = load(append(sessionMaskRoot, '\', sprintf('Bot_%03d', trial_num-1)));
+        tongue_bot_mask = load(append(sessionMaskRoot, '\', sprintf('Bot_%03d', trial_num-1), '.mat'));
         tongue_bot_mask = tongue_bot_mask.mask_pred;
 
-        tongue_top_mask = load(append(sessionMaskRoot, '\', sprintf('Top_%03d', trial_num-1)));
+        tongue_top_mask = load(append(sessionMaskRoot, '\', sprintf('Top_%03d', trial_num-1), '.mat'));
         tongue_top_mask = tongue_top_mask.mask_pred;
         
         % loop through each lick per trial and filter times when contact occured
@@ -343,11 +343,4 @@ if sum(isnan(contact_temp)) > 0
 else
     contact_centroid = contact_temp;
 end
-
 end
-
-
-    
-
-
-
