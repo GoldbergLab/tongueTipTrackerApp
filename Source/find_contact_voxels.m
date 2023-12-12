@@ -59,7 +59,7 @@ for trial_num = 1:max(trial_num)
         contact_area = cell(size(t_stats_temp));
         contact_centroid2 = cell(size(t_stats_temp));
         contact_area2 = cell(size(t_stats_temp));
-        for lick_idx = 1:numel(t_stats_temp)  
+        parfor lick_idx = 1:numel(t_stats_temp)  
 
             fprintf('Finding contact voxels on Trial %d, Lick %d\n', trial_num, lick_idx);
 
