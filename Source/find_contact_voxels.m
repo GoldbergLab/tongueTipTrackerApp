@@ -1,9 +1,6 @@
 function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, sessionVideoRoot, vid_index, params)
 
-% load('X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms\t_stats.mat');
-% t_stats_folder = 'X:\bsi8\2D_Doublestep_Data\ALM_TJS1\ALM_TJS1_6\Masks\211117_ALM_TJS1_6_fakeout2D_ALM_L2_250ms';
-
-% spout width in mm - for thin spout
+% spout width in mm - for thin spout in BOTTOM VIEW
 spout_width_mm = 1.27;
 
 % mm/pix conversion factor from PCC
@@ -57,16 +54,12 @@ for trial_num = 1:max(trial_num)
         tongue_top_mask = load(append(sessionMaskRoot, '\', sprintf('Top_%03d', trial_num-1)));
         tongue_top_mask = tongue_top_mask.mask_pred;
         
-        top_dim = [size(tongue_top_mask, 2), size(tongue_top_mask, 3)];
-        centroid_avoid = [] ;      
-        [tongue_bot_mask, tongue_top_mask] = processTongueMasks(tongue_bot_mask, tongue_top_mask, params, top_dim, centroid_avoid);
-
         % loop through each lick per trial and filter times when contact occured
         contact_centroid = cell(size(t_stats_temp));
         contact_area = cell(size(t_stats_temp));
         contact_centroid2 = cell(size(t_stats_temp));
         contact_area2 = cell(size(t_stats_temp));
-        parfor lick_idx = 1:numel(t_stats_temp)  
+        for lick_idx = 1:numel(t_stats_temp)  
 
             fprintf('Finding contact voxels on Trial %d, Lick %d\n', trial_num, lick_idx);
 
@@ -77,12 +70,12 @@ for trial_num = 1:max(trial_num)
                 spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(lick_idx).spout_contact:t_stats_temp(lick_idx).spout_contact_offset);
                 spout_y_temp2 = spout_y_temp(t_stats_temp(lick_idx).spout_contact:t_stats_temp(lick_idx).spout_contact_offset);
 
-                trial_mask_start_ind = trial_vid_cue_time - 1;    
+                trial_mask_start_ind = trial_vid_cue_time;    
                 tongue_bot_mask_temp = tongue_bot_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset, :, :);
                 tongue_top_mask_temp = tongue_top_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset, :, :);
                 
                 % find tongue-spout distances
-                [contact_centroid_temp, contact_area_temp] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
+                [contact_centroid_temp, contact_area_temp] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp, params);
             else 
                 contact_centroid_temp = NaN;
                 contact_area_temp = NaN;
@@ -97,12 +90,12 @@ for trial_num = 1:max(trial_num)
                 spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(lick_idx).spout_contact2:t_stats_temp(lick_idx).spout_contact_offset2);
                 spout_y_temp2 = spout_y_temp(t_stats_temp(lick_idx).spout_contact2:t_stats_temp(lick_idx).spout_contact_offset2);
 
-                trial_mask_start_ind = trial_vid_cue_time - 1;   
+                trial_mask_start_ind = trial_vid_cue_time;   
                 tongue_bot_mask_temp = tongue_bot_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact2:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset2, :, :);
                 tongue_top_mask_temp = tongue_top_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact2:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset2, :, :);
 
                 % find tongue-spout distances
-                [contact_centroid_temp2, contact_area_temp2] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp);
+                [contact_centroid_temp2, contact_area_temp2] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp, params);
             else 
                 contact_centroid_temp2 = NaN;
                 contact_area_temp2 = NaN;
@@ -128,7 +121,7 @@ end
 
 end
 
-function [contact_centroid, contact_area] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp)
+function [contact_centroid, contact_area] = getTongueSpoutDist(spout_width_pix, spout_x_mid_temp2, spout_z_mid_temp2, spout_y_temp2, tongue_bot_mask_temp, tongue_top_mask_temp, params)
 
 % initialize contact_centroid
 contact_centroid = zeros(numel(spout_x_mid_temp2), 3);
@@ -140,59 +133,82 @@ spout_y_thresh = 172;
 % loop over each timestep where a contact occured
 tongue_dist = cell(numel(spout_x_mid_temp2), 2);
 [x, y, z] = meshgrid(1:192, 1:240, 1:144);
-yshift_scalar = 15;
-dil_scalar = 10;
+
+yshift_scalar = 5;
+dil_scalar = 5;
 dist_thresh = 1;
 for t = 1:numel(spout_x_mid_temp2)
     
-    % create the 'dilated' & 'real' 3D spout reconstruction
+    % on the first contact timestep, create the 3D spout reconstruction
     if t == 1
-        spout_3D_dilate = sqrt((y - spout_x_mid_temp2(t)).^2 + (z - spout_z_mid_temp2(t)).^2) <= (radius + (radius/2)) & (x >= (spout_y_temp2(t) - yshift_scalar) & x <= spout_y_thresh);
         spout_3D = sqrt((y - spout_x_mid_temp2(t)).^2 + (z - spout_z_mid_temp2(t)).^2) <= radius & (x >= spout_y_temp2(t) & x <= spout_y_thresh);
+    % on all timesteps following the first, only re-create the spout
+    % reconstruction if the spout has moved (if the values of the spout
+    % position at time t does not equal those at time t - 1.
     elseif t > 1
-        if spout_x_mid_temp2(t) == spout_x_mid_temp2(t - 1) && spout_z_mid_temp2(t) == spout_z_mid_temp2(t - 1) && spout_y_temp2(t) == spout_y_temp2(t - 1)
-            % do not recalculate spout_3D_dilate and spout_3D
-        else
-            spout_3D_dilate = sqrt((y - spout_x_mid_temp2(t)).^2 + (z - spout_z_mid_temp2(t)).^2) <= (radius + (radius/2)) & (x >= (spout_y_temp2(t) - yshift_scalar) & x <= spout_y_thresh);
+        if spout_x_mid_temp2(t) ~= spout_x_mid_temp2(t - 1) || spout_z_mid_temp2(t) ~= spout_z_mid_temp2(t - 1) || spout_y_temp2(t) ~= spout_y_temp2(t - 1)
             spout_3D = sqrt((y - spout_x_mid_temp2(t)).^2 + (z - spout_z_mid_temp2(t)).^2) <= radius & (x >= spout_y_temp2(t) & x <= spout_y_thresh);
         end
     end
     
-    % create the 'real' full tongue 3D reconstruction
-    tongue_bot_3D = repmat(squeeze(tongue_bot_mask_temp(t, :, :)), 1, 1, size(tongue_top_mask_temp, 2));
-    tongue_top_3D = repmat(squeeze(tongue_top_mask_temp(t, :, :)), 1, 1, size(tongue_bot_mask_temp, 2));
+    % get masks at current timestemp
+    tongue_bot_mask_frame = squeeze(tongue_bot_mask_temp(t, :, :));
+    tongue_top_mask_frame = squeeze(tongue_top_mask_temp(t, :, :));
+    
+    % preprocess masks
+    top_dim = [size(tongue_top_mask_frame, 1), size(tongue_top_mask_frame, 2)];
+    centroid_avoid = [] ;      
+    [tongue_bot_mask_frame, tongue_top_mask_frame] = processTongueMasks(tongue_bot_mask_frame, tongue_top_mask_frame, params, top_dim, centroid_avoid);
+    
+    % create the full tongue 3D reconstruction
+    tongue_bot_3D = repmat(tongue_bot_mask_frame, 1, 1, size(tongue_top_mask_frame, 1));
+    tongue_top_3D = repmat(tongue_top_mask_frame, 1, 1, size(tongue_bot_mask_frame, 1));
     tongue_top_3D = permute(tongue_top_3D, [3 2 1]);
     tongue_3D = tongue_top_3D & tongue_bot_3D;
     
-    % find the contact points between the dilated spout and real tongue
-    tongue_contact_pts = tongue_3D & spout_3D_dilate;
-    
-    % if there are no contact points, shift the dilated spout forward by 5
-    % pixels until there are contact points, or until the shift is 25
-    % pixels. If there is still no contact points, increase radius of spout
-    % by 5 pixel increments until there are contact points.
+    % find the contact points between the spout and real tongue
+    tongue_contact_pts = tongue_3D & spout_3D;
+
+    % If there are no contact points, first try to shift the spout forward
+    % incrementally until there are contact points.If there is still no 
+    % contact points, increase radius of spout and shift forward. Repeat 
+    % until the upper bound of radius and shift until there are contact 
+    % points. If still no contact points are  detected, we have a bad mask,
+    % so NaN contact points.
     yshift_scalar_temp = yshift_scalar;
-    radius_temp = radius;
+    radius_temp = 0;
     while sum(tongue_contact_pts, 'all') == 0
-        if yshift_scalar_temp < 35 && radius_temp < 21
-            yshift_scalar_temp = yshift_scalar_temp + 5;
-            spout_3D_dilate = sqrt((y - spout_x_mid_temp2(t)).^2 + (z - spout_z_mid_temp2(t)).^2) <= (radius + (radius/2)) & (x >= (spout_y_temp2(t) - yshift_scalar_temp) & x <= spout_y_thresh);
-            tongue_contact_pts = tongue_3D & spout_3D_dilate;
-        elseif yshift_scalar_temp >= 35 && radius_temp < 21
-            radius_temp = radius_temp + 5;
-            spout_3D_dilate = sqrt((y - spout_x_mid_temp2(t)).^2 + (z - spout_z_mid_temp2(t)).^2) <= (radius + (radius_temp/2)) & (x >= (spout_y_temp2(t) - yshift_scalar_temp) & x <= spout_y_thresh);
-            tongue_contact_pts = tongue_3D & spout_3D_dilate;
-        elseif yshift_scalar_temp >= 35 &&  radius_temp > 21
-            % this indicates a shitty mask - mark as NaN and interpolate
+        if radius_temp <= 15 && sum(tongue_contact_pts, 'all') == 0
+            while yshift_scalar_temp < 20
+                if sum(tongue_contact_pts, 'all') == 0
+                    spout_3D_temp = sqrt((y - spout_x_mid_temp2(t)).^2 + (z - spout_z_mid_temp2(t)).^2) <= (radius + radius_temp) & (x >= (spout_y_temp2(t) - yshift_scalar_temp) & x <= spout_y_thresh);
+                    tongue_contact_pts = tongue_3D & spout_3D_temp;
+                    yshift_scalar_temp = yshift_scalar_temp + 5;
+                else
+                    break
+                end
+            end
+            yshift_scalar_temp = yshift_scalar;
+            radius_temp = radius_temp + 3;
+        elseif radius_temp > 15 && sum(tongue_contact_pts, 'all') == 0
             tongue_contact_pts = NaN;
+            contact_pts = NaN;
             break
         end
-    end
+    end  
     
+    % here, we only want to find an estimate of the points on the spout
+    % that contacted the tongue. This will be used to calculate the
+    % distance between each point of contact on the spout and tongue,
+    % and we will use the distance threshold to filter points that are
+    % too far away to be considered contact points. Note that, we only need
+    % a rough estimate of contact points on the spout to do this.  So
+    % dilation only is fine here - no need to shift forward as dilation
+    % will do this as well. 
     if ~isnan(tongue_contact_pts)
         tongue_contact_idx = find(tongue_contact_pts);
 
-        % filter only the contact points on tongue that contacted dilated spout
+        % filter only the contact points on tongue that contacted spout
         tongue_3D_shell = get3MaskSurface(tongue_3D);
         tongue_idx = find(tongue_3D_shell);
         tongue_idx = tongue_idx(ismember(tongue_idx, tongue_contact_idx));
@@ -201,24 +217,17 @@ for t = 1:numel(spout_x_mid_temp2)
 
         % find bound. box inds to reduce vol of tongue_contact_pts before dilation
         [~, ylims, xlims, zlims] = crop3Mask(tongue_contact_pts);
-        tongue_contact_pts_box = tongue_contact_pts(ylims(1)-dil_scalar:ylims(2)+dil_scalar, xlims(1)-dil_scalar:xlims(2)+dil_scalar, zlims(1)-dil_scalar:zlims(2)+dil_scalar);
+        tongue_contact_pts_box = tongue_contact_pts(ylims(1):ylims(2), xlims(1):xlims(2), zlims(1):zlims(2));
+        tongue_3D_contact = false(240, 192, 144);
+        tongue_3D_contact(ylims(1):ylims(2), xlims(1):xlims(2), zlims(1):zlims(2)) = tongue_contact_pts_box;
 
-        % dilate only the points on the tongue that contacted dilated spout
-        tongue_3D_box_dilate = imdilate(tongue_contact_pts_box, ones(dil_scalar, dil_scalar, dil_scalar));
-
-        % create empty volume of same size and fill in with dilated tongue
-        tongue_3D_dilate = false(240, 192, 144);
-        tongue_3D_dilate(ylims(1)-dil_scalar:ylims(2)+dil_scalar, xlims(1)-dil_scalar:xlims(2)+dil_scalar, zlims(1)-dil_scalar:zlims(2)+dil_scalar) = tongue_3D_box_dilate;
-
-        % find the contact points between the dilated spout and real tongue
-        spout_contact_pts = spout_3D & tongue_3D_dilate;
+        % find the contact points between the spout and real tongue
+        spout_contact_pts = spout_3D & tongue_3D_contact;       
 
         % if there are no contact points, increase the dilation factor until
         % the tongue contacts the spout, then find indices.
         dil_scalar_temp = dil_scalar;
-        while sum(spout_contact_pts, 'all') == 0
-            dil_scalar_temp = dil_scalar_temp + 10;
-            
+        while sum(spout_contact_pts, 'all') == 0           
             pos1 = [ylims(1)-dil_scalar_temp xlims(1)-dil_scalar_temp zlims(1)-dil_scalar_temp];
             pos2 = [ylims(2)+dil_scalar_temp xlims(2)+dil_scalar_temp zlims(2)+dil_scalar_temp];
             
@@ -236,6 +245,7 @@ for t = 1:numel(spout_x_mid_temp2)
             tongue_3D_dilate = false(240, 192, 144);
             tongue_3D_dilate(pos1(1):pos2(1), pos1(2):pos2(2), pos1(3):pos2(3)) = tongue_3D_box_dilate;
             spout_contact_pts = spout_3D & tongue_3D_dilate;
+            dil_scalar_temp = dil_scalar_temp + 5;
         end 
         spout_contact_idx = find(spout_contact_pts);
 
@@ -264,30 +274,25 @@ for t = 1:numel(spout_x_mid_temp2)
 
         % combine the overlap and distance points into one array
         contact_pts = [dist_pts(~ismember(dist_pts, overlap_pts, 'rows'), :); overlap_pts];
-        
-    elseif isnan(tongue_contact_pts)
-        contact_pts = NaN;
     end
     
-    % sometimes there is only one contact point
-    if isnan(contact_pts)
+    % if there are contact points...
+    if ~isempty(contact_pts)
+        % and if there is more than one contact point, take the mean
+        if numel(contact_pts) > 3
+            tongue_dist{t, 1} = mean(contact_pts);
+        % and if there is only 1 contact point, use that
+        else
+            tongue_dist{t, 1} = contact_pts;
+        end
+        tongue_dist{t, 2} = size(contact_pts, 1);
+    % if there were no contact points detected, NaN both entries
+    elseif isnan(contact_pts)
         tongue_dist{t, 1} = [NaN NaN NaN];
         tongue_dist{t, 2} = NaN;
+    % this case below should not be a concern, but just in case...
     elseif isempty(contact_pts)
         disp('Warning! No contact points detected on a lick and timestep that made contact')
-        if numel(contact_pts) > 3
-            tongue_dist{t, 1} = mean(contact_pts);
-        else
-            tongue_dist{t, 1} = contact_pts;
-        end
-        tongue_dist{t, 2} = size(contact_pts, 1);
-     elseif ~isempty(contact_pts)
-        if numel(contact_pts) > 3
-            tongue_dist{t, 1} = mean(contact_pts);
-        else
-            tongue_dist{t, 1} = contact_pts;
-        end
-        tongue_dist{t, 2} = size(contact_pts, 1);
     end
 end
 
