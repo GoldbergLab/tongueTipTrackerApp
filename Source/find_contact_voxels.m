@@ -57,7 +57,9 @@ for trial_num = 1:max(trial_num)
         tongue_top_mask = load(append(sessionMaskRoot, '\', sprintf('Top_%03d', trial_num-1)));
         tongue_top_mask = tongue_top_mask.mask_pred;
         
-        [tongue_bot_mask, tongue_top_mask] = processTongueMasks(tongue_bot_mask, tongue_top_mask, params);
+        top_dim = [size(tongue_top_mask, 2), size(tongue_top_mask, 3)];
+        centroid_avoid = [] ;      
+        [tongue_bot_mask, tongue_top_mask] = processTongueMasks(tongue_bot_mask, tongue_top_mask, params, top_dim, centroid_avoid);
 
         % loop through each lick per trial and filter times when contact occured
         contact_centroid = cell(size(t_stats_temp));
