@@ -177,8 +177,8 @@ for t = 1:numel(spout_x_mid_temp2)
     yshift_scalar_temp = yshift_scalar;
     radius_temp = 0;
     while sum(tongue_contact_pts, 'all') == 0
-        if radius_temp <= 15 && sum(tongue_contact_pts, 'all') == 0
-            while yshift_scalar_temp < 20
+        if radius_temp <= 30 && sum(tongue_contact_pts, 'all') == 0
+            while yshift_scalar_temp < 30
                 if sum(tongue_contact_pts, 'all') == 0
                     spout_3D_temp = sqrt((y - spout_x_mid_temp2(t)).^2 + (z - spout_z_mid_temp2(t)).^2) <= (radius + radius_temp) & (x >= (spout_y_temp2(t) - yshift_scalar_temp) & x <= spout_y_thresh);
                     tongue_contact_pts = tongue_3D & spout_3D_temp;
@@ -189,7 +189,7 @@ for t = 1:numel(spout_x_mid_temp2)
             end
             yshift_scalar_temp = yshift_scalar;
             radius_temp = radius_temp + 3;
-        elseif radius_temp > 15 && sum(tongue_contact_pts, 'all') == 0
+        elseif radius_temp > 30 && sum(tongue_contact_pts, 'all') == 0
             tongue_contact_pts = NaN;
             contact_pts = NaN;
             break
@@ -276,7 +276,7 @@ for t = 1:numel(spout_x_mid_temp2)
     end
     
     % if there are contact points...
-    if ~isempty(contact_pts)
+    if ~isempty(contact_pts) & ~isnan(contact_pts)
         % and if there is more than one contact point, take the mean
         if numel(contact_pts) > 3
             tongue_dist{t, 1} = mean(contact_pts);
@@ -286,12 +286,14 @@ for t = 1:numel(spout_x_mid_temp2)
         end
         tongue_dist{t, 2} = size(contact_pts, 1);
     % if there were no contact points detected, NaN both entries
-    elseif isnan(contact_pts)
+    elseif ~isempty(contact_pts) & isnan(contact_pts)
         tongue_dist{t, 1} = [NaN NaN NaN];
         tongue_dist{t, 2} = NaN;
     % this case below should not be a concern, but just in case...
     elseif isempty(contact_pts)
         disp('Warning! No contact points detected on a lick and timestep that made contact')
+        tongue_dist{t, 1} = [NaN NaN NaN];
+        tongue_dist{t, 2} = NaN;
     end
 end
 
