@@ -1,4 +1,4 @@
-function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, sessionVideoRoot, vid_index, params)
+function t_stats = find_contact_voxels(t_stats, sessionMaskRoot, sessionVideoRoot, params)
 
 % spout width in mm - for thin spout in BOTTOM VIEW
 spout_width_mm = 1.27;
@@ -20,7 +20,7 @@ spout_y = cellfun(@(x) round(x), {t_stats.spout_position_y}, 'UniformOutput', fa
 spout_z = {t_stats.spout_position_z};
 spout_z_mid = cellfun(@(x) round(144-x-(spout_width_pix/2)), spout_z, 'UniformOutput', false);
 
-% get trial numbers
+% get trial numbers - remember, trial numbers are from videos, not FPGA.
 trial_num_all = unique([t_stats.trial_num]);
 
 % get video list
@@ -30,7 +30,7 @@ vid_list = dir(fullfile(sessionVideoRoot, '*.avi'));
 for trial_num = trial_num_all
     
     % get cue times from video name
-    trial_vid_temp = vid_list(vid_index(trial_num));
+    trial_vid_temp = vid_list(trial_num);
     trial_vid_name = trial_vid_temp.name;
     trial_vid_cue_time = str2num(trial_vid_name(regexp(trial_vid_name, '(?<=_C)\d', 'start'):regexp(trial_vid_name, '(?<=_C)\d*', 'end')));
     
