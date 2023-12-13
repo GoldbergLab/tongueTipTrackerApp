@@ -9,7 +9,7 @@ function vid_index = mapVideoIndexToFPGATrialIndex(cue_time_video, lick_struct, 
 %       trial number that corresponds to a FPGA trial, and element 2 is the
 %       FPGA trial that corresponds to that video trial.
 %    vid_index is a list of video list indices such that to find the video
-%       index j corresponding to FPGA trial index k, use j = vid_index(k).
+%       index j corresponding to FPGA trial index k, use k = vid_index(j).
 %
 % Create a list that maps video trial index to FPGA trial index. This can
 %   be used, for example, to find the lick_struct index that corresponds to
