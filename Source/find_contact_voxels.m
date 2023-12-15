@@ -70,7 +70,7 @@ for trial_num = trial_num_all
                 spout_z_mid_temp2 = spout_z_mid_temp(t_stats_temp(lick_idx).spout_contact:t_stats_temp(lick_idx).spout_contact_offset);
                 spout_y_temp2 = spout_y_temp(t_stats_temp(lick_idx).spout_contact:t_stats_temp(lick_idx).spout_contact_offset);
 
-                trial_mask_start_ind = trial_vid_cue_time;    
+                trial_mask_start_ind = trial_vid_cue_time - 1;    
                 tongue_bot_mask_temp = tongue_bot_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset, :, :);
                 tongue_top_mask_temp = tongue_top_mask(trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact:trial_mask_start_ind+t_stats_temp(lick_idx).spout_contact_offset, :, :);
                 
