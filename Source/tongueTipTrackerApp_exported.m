@@ -67,6 +67,8 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         FrameLabel                      matlab.ui.control.Label
         SessionDataTable                matlab.ui.control.Table
         ImageAxes                       matlab.ui.control.UIAxes
+        ContextMenu                     matlab.ui.container.ContextMenu
+        SingleframedebugMenu            matlab.ui.container.Menu
     end
 
 
@@ -2138,6 +2140,24 @@ helpMsg = {...
             value = app.FPGAdataformatDropDown.Value;
             
         end
+
+        % Menu selected function: SingleframedebugMenu
+        function SingleframedebugMenuSelected(app, event)
+            dataTable = app.getDataTable();
+            sessionDataRoots = dataTable.SessionMaskDirs;
+            im_shifts = app.getImShifts(dataTable);
+            sessionNum = app.sessionDataTableSelection(1);
+            answer = inputdlg({'Video #', 'Frame #'}, sprintf('Select options for tip track debugging (session #%d):', sessionNum), 1, {'1', '1'});
+            if isempty(answer)
+                app.print('Tip track debug cancelled');
+                return
+            end
+            app.print('Beginning single frame tip track debug');
+            videoIdx = str2double(answer{1});
+            frameIdx = str2double(answer{2});
+            debugTongueTipTracking(sessionDataRoots{sessionNum}, videoIdx, frameIdx, im_shifts(sessionNum));
+            app.print('Finished single frame tip track debug');
+        end
     end
 
     % Component initialization
@@ -2566,6 +2586,17 @@ helpMsg = {...
             app.AutorevertoldhealsCheckBox.Text = 'Auto-revert old heals';
             app.AutorevertoldhealsCheckBox.Position = [807 423 133 22];
             app.AutorevertoldhealsCheckBox.Value = true;
+
+            % Create ContextMenu
+            app.ContextMenu = uicontextmenu(app.UIFigure);
+
+            % Create SingleframedebugMenu
+            app.SingleframedebugMenu = uimenu(app.ContextMenu);
+            app.SingleframedebugMenu.MenuSelectedFcn = createCallbackFcn(app, @SingleframedebugMenuSelected, true);
+            app.SingleframedebugMenu.Text = 'Single frame debug';
+            
+            % Assign app.ContextMenu
+            app.TrackTongueTipsButton.ContextMenu = app.ContextMenu;
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
