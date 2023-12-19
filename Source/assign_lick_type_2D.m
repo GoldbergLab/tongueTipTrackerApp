@@ -18,7 +18,14 @@ end
 for i=1:numel(vid_index)
     if ~isnan(vid_index(i)) && sum([t_stats.trial_num] == i) > 0
         ind = find([t_stats.trial_num] == i);
-        t_stats(ind(1)).analog_lick = l_sp_struct(vid_index(i)).analog_lick;
+        if numel(l_sp_struct(vid_index(i)).analog_lick) ~= 1300
+            t_stats(ind)=[];
+        else
+            t_stats(ind(1)).analog_lick = l_sp_struct(vid_index(i)).analog_lick;
+        end
+    elseif isnan(vid_index(i)) && sum([t_stats.trial_num] == i) > 0
+        ind = find([t_stats.trial_num] == i);
+        t_stats(ind)=[];
     end
 end
 
