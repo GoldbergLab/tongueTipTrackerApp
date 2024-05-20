@@ -3,66 +3,66 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
-        ImageAxes                       matlab.ui.control.UIAxes
-        SessionDataTable                matlab.ui.control.Table
-        FrameLabel                      matlab.ui.control.Label
-        FrameSlider                     matlab.ui.control.Slider
-        AddSessionButton                matlab.ui.control.Button
-        VideoBrowser                    matlab.ui.container.Tree
-        VideoBrowserLabel               matlab.ui.control.Label
-        LoadVideoButton                 matlab.ui.control.Button
-        FindDirectoryButton             matlab.ui.control.Button
-        ShowCrosshairCheckBox           matlab.ui.control.CheckBox
-        MarkerInstructionLabel          matlab.ui.control.Label
-        ShowMarkersCheckBox             matlab.ui.control.CheckBox
-        CurrentVideoLabel               matlab.ui.control.Label
-        OutputLabel_2                   matlab.ui.control.Label
-        Output                          matlab.ui.control.TextArea
-        TongueTipTrackerLabel           matlab.ui.control.Label
-        AConvertCINEstoAVIsButton       matlab.ui.control.Button
-        ParallelPoolStateLabel          matlab.ui.control.Label
-        StartParallelPoolButton         matlab.ui.control.Button
-        TiptrackprocessingLabel         matlab.ui.control.Label
-        VerboseCheckBox                 matlab.ui.control.CheckBox
-        MakeMoviesCheckBox              matlab.ui.control.CheckBox
-        PlotKinematicsCheckBox          matlab.ui.control.CheckBox
-        SaveTrackingDataCheckBox        matlab.ui.control.CheckBox
-        SaveKinematicsPlotsCheckBox     matlab.ui.control.CheckBox
-        TrackTongueTipsButton           matlab.ui.control.Button
-        SaveDataTableButton             matlab.ui.control.Button
-        LoadDataTableButton             matlab.ui.control.Button
-        CleartableButton                matlab.ui.control.Button
-        TopFiducialLabel                matlab.ui.control.Label
-        BotFiducialLabel                matlab.ui.control.Label
-        TopSpoutLabel                   matlab.ui.control.Label
-        BotSpoutLabel                   matlab.ui.control.Label
-        OpenselecteddirectoryButton     matlab.ui.control.Button
-        BGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
-        BLabelvideoswcuelaserButton     matlab.ui.control.Button
-        DryrunlabelingCheckBox          matlab.ui.control.CheckBox
-        reloadVideoBrowser              matlab.ui.control.Button
-        CAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
-        ACombineconvertFPGAdatfilesButton  matlab.ui.control.Button
-        BProcessFPGAdataButton          matlab.ui.control.Button
-        PlotNplickOutputCheckBox        matlab.ui.control.CheckBox
-        ClearButton                     matlab.ui.control.Button
-        DIncorporateFPGAdataintotiptracksButton  matlab.ui.control.Button
-        OverlayMasksCheckBox            matlab.ui.control.CheckBox
-        VideoprocessingLabel            matlab.ui.control.Label
-        MaskprocessingLabel             matlab.ui.control.Label
-        FPGAdataprocessingLabel         matlab.ui.control.Label
-        HoverovertheimageandpressLabel  matlab.ui.control.Label
-        cursorPositionLabel             matlab.ui.control.Label
-        HelpButton                      matlab.ui.control.Button
-        SetupsessiondirectoriesLabel    matlab.ui.control.Label
-        ActivateallButton               matlab.ui.control.Button
-        DeactivateallButton             matlab.ui.control.Button
-        FPGAdataformatDropDownLabel     matlab.ui.control.Label
-        FPGAdataformatDropDown          matlab.ui.control.DropDown
-        MeasuringRulerCheckBox          matlab.ui.control.CheckBox
-        SpoutWidthLabel                 matlab.ui.control.Label
-        AddDataTableButton              matlab.ui.control.Button
         DeleteSessionButton             matlab.ui.control.Button
+        AddDataTableButton              matlab.ui.control.Button
+        SpoutWidthLabel                 matlab.ui.control.Label
+        MeasuringRulerCheckBox          matlab.ui.control.CheckBox
+        FPGAdataformatDropDown          matlab.ui.control.DropDown
+        FPGAdataformatDropDownLabel     matlab.ui.control.Label
+        DeactivateallButton             matlab.ui.control.Button
+        ActivateallButton               matlab.ui.control.Button
+        SetupsessiondirectoriesLabel    matlab.ui.control.Label
+        HelpButton                      matlab.ui.control.Button
+        cursorPositionLabel             matlab.ui.control.Label
+        HoverovertheimageandpressLabel  matlab.ui.control.Label
+        FPGAdataprocessingLabel         matlab.ui.control.Label
+        MaskprocessingLabel             matlab.ui.control.Label
+        VideoprocessingLabel            matlab.ui.control.Label
+        OverlayMasksCheckBox            matlab.ui.control.CheckBox
+        DIncorporateFPGAdataintotiptracksButton  matlab.ui.control.Button
+        ClearButton                     matlab.ui.control.Button
+        PlotNplickOutputCheckBox        matlab.ui.control.CheckBox
+        BProcessFPGAdataButton          matlab.ui.control.Button
+        ACombineconvertFPGAdatfilesButton  matlab.ui.control.Button
+        CAlignFPGAandVideoTrialsButton  matlab.ui.control.Button
+        reloadVideoBrowser              matlab.ui.control.Button
+        DryrunlabelingCheckBox          matlab.ui.control.CheckBox
+        BLabelvideoswcuelaserButton     matlab.ui.control.Button
+        BGetlicksegmentationandkinematicsButton  matlab.ui.control.Button
+        OpenselecteddirectoryButton     matlab.ui.control.Button
+        BotSpoutLabel                   matlab.ui.control.Label
+        TopSpoutLabel                   matlab.ui.control.Label
+        BotFiducialLabel                matlab.ui.control.Label
+        TopFiducialLabel                matlab.ui.control.Label
+        CleartableButton                matlab.ui.control.Button
+        LoadDataTableButton             matlab.ui.control.Button
+        SaveDataTableButton             matlab.ui.control.Button
+        TrackTongueTipsButton           matlab.ui.control.Button
+        SaveKinematicsPlotsCheckBox     matlab.ui.control.CheckBox
+        SaveTrackingDataCheckBox        matlab.ui.control.CheckBox
+        PlotKinematicsCheckBox          matlab.ui.control.CheckBox
+        MakeMoviesCheckBox              matlab.ui.control.CheckBox
+        VerboseCheckBox                 matlab.ui.control.CheckBox
+        TiptrackprocessingLabel         matlab.ui.control.Label
+        StartParallelPoolButton         matlab.ui.control.Button
+        ParallelPoolStateLabel          matlab.ui.control.Label
+        AConvertCINEstoAVIsButton       matlab.ui.control.Button
+        TongueTipTrackerLabel           matlab.ui.control.Label
+        Output                          matlab.ui.control.TextArea
+        OutputLabel_2                   matlab.ui.control.Label
+        CurrentVideoLabel               matlab.ui.control.Label
+        ShowMarkersCheckBox             matlab.ui.control.CheckBox
+        MarkerInstructionLabel          matlab.ui.control.Label
+        ShowCrosshairCheckBox           matlab.ui.control.CheckBox
+        FindDirectoryButton             matlab.ui.control.Button
+        LoadVideoButton                 matlab.ui.control.Button
+        VideoBrowserLabel               matlab.ui.control.Label
+        VideoBrowser                    matlab.ui.container.Tree
+        AddSessionButton                matlab.ui.control.Button
+        FrameSlider                     matlab.ui.control.Slider
+        FrameLabel                      matlab.ui.control.Label
+        SessionDataTable                matlab.ui.control.Table
+        ImageAxes                       matlab.ui.control.UIAxes
     end
 
 
@@ -140,9 +140,11 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         
         function populateVideoSessionNode(app, sessionNode)
             videoDir = sessionNode.NodeData;
-            videos = dir(fullfile(videoDir, '*.avi'));
+            videos = findSessionVideos(videoDir, 'avi', @parsePCCFilenameTimestamp);
             for j = 1:numel(videos)
-                uitreenode(sessionNode, 'Text', videos(j).name, 'Tag', 'video', 'NodeData', struct());
+                [~, videoName, videoExt] = fileparts(videos{j});
+                videoFileName = [videoName, videoExt];
+                uitreenode(sessionNode, 'Text', videoFileName, 'Tag', 'video', 'NodeData', struct());
             end
         end
         
@@ -911,7 +913,16 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             app.print('Beginning tongue tip tracking for all sessions.');
             dataTable = app.getDataTable();
             sessionDataRoots = dataTable.SessionMaskDirs;
-            im_shifts = cell2mat(cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false)) - cell2mat(cellfun(@str2num, dataTable.Top_Spout_X, 'UniformOutput', false));
+
+            % Extract bottom and top spout positions for all session
+            bot_spout_positions = cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false);
+            top_spout_positions = cellfun(@str2num, dataTable.Top_Spout_X, 'UniformOutput', false);
+
+            % Take mode of the difference of the spout positions for each
+            % session to get the im_shifts (using the mode in case there
+            % are slightly different calculated im_shifts for different
+            % spout positions within a session)
+            im_shifts = cellfun(@(x, y)mode(x-y), bot_spout_positions, top_spout_positions);
 
             verboseFlag = app.VerboseCheckBox.Value;
             makeMovieFlag = app.MakeMoviesCheckBox.Value;
@@ -983,133 +994,8 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             column = find(strcmp(app.getDataTable(true).Properties.VariableNames, dataField));
         end
 
-        function startingTrialNums = alignTDiffs(app, sessionDataRoots, tdiffs_FPGA, tdiffs_Video)
-            f = figure('Units', 'normalized', 'Position', [0.1, 0, 0.8, 0.85]);
-            % Overwrite function close callback to prevent user from
-            % clicking "x", which would destroy data. User must use
-            % "Accept" button instead
-            function customCloseReqFcn(src, callbackdata)
-                selection = questdlg('Are you sure you want to discard your alignment? Use the ''Accept'' button instead to keep your alignment.',...
-                    'Are you sure?',...
-                    'Yes, discard','No, keep','Yes, discard'); 
-                switch selection 
-                    case 'Yes, discard'
-                        delete(src);
-                    case 'No, keep'
-                        return;
-                end
-            end
-            
-            set(f, 'CloseRequestFcn', @customCloseReqFcn);
-            % Create accept button, which resumes main thread execution
-            % when clicked.
-            acceptButton = uicontrol(f, 'Position',[10 10 200 20],'String','Accept trial alignments','Callback','uiresume(gcbf)');
-%            pan(f, 'xon');
-%            zoom(f, 'xon');
-            tdiffs.FPGA = tdiffs_FPGA;
-            tdiffs.Video = tdiffs_Video;
-
-            sgtitle({'For each session, select the earliest starting trial interval',...
-                     'for FPGA and Video trials so they line up with each other.',...
-                     'Click Accept when done'});
-            
-            f.UserData = struct();
-            f.UserData.seriesList = {'FPGA', 'Video'};
-            f.UserData.faceColors.FPGA = 'g';
-            f.UserData.faceColors.Video = 'c';
-            f.UserData.yVal.FPGA = 0;
-            f.UserData.yVal.Video = 0.5;
-            f.UserData.h = 0.5;
-            for sessionNum = 1:numel(sessionDataRoots)
-                ax(sessionNum) = subplot(numel(sessionDataRoots), 1, sessionNum, 'HitTest', 'off', 'YLimMode', 'manual');
-                hold(ax(sessionNum), 'on');
-                ax(sessionNum).UserData = struct();
-                ax(sessionNum).UserData.selectedRectangle = struct();
-                for seriesNum = 1:numel(f.UserData.seriesList)
-                    % For each series (FPGA and Video), add useful info to
-                    %   axis UserData
-                    series = f.UserData.seriesList{seriesNum};
-                    ax(sessionNum).UserData.sessionNum = sessionNum;
-                    ax(sessionNum).UserData.StartingTrialNum.(series) = 1;
-                    ax(sessionNum).UserData.selectedRectangle.(series) = [];
-                    ax(sessionNum).UserData.rectangles.(series) = matlab.graphics.primitive.Rectangle.empty();
-                    ax(sessionNum).UserData.tdiff.(series) = tdiffs.(series){sessionNum}; %tdiffs_FPGA{sessionNum};
-                    ax(sessionNum).UserData.t.(series) = [0, cumsum(ax(sessionNum).UserData.tdiff.(series))];
-                    
-                    seriesShift = ax(sessionNum).UserData.t.(series)(ax(sessionNum).UserData.StartingTrialNum.(series));
-                    for trialNum = 1:(numel(ax(sessionNum).UserData.t.(series))-1)
-                        % Create rectangles and save handles to axis UserData
-                        rectangleID.trialNum = trialNum;
-                        rectangleID.series = series;
-                        ax(sessionNum).UserData.rectangles.(series)(trialNum) = ...
-                            rectangle(ax(sessionNum), ...
-                                      'Position', [ax(sessionNum).UserData.t.(series)(trialNum) - seriesShift, f.UserData.yVal.(series), ax(sessionNum).UserData.tdiff.(series)(trialNum), f.UserData.h], ...
-                                      'FaceColor', f.UserData.faceColors.(series), ...
-                                      'ButtonDownFcn', @tdiffRectangleCallback, ...
-                                      'UserData', rectangleID);
-                    end
-                    xmaxSeries(seriesNum) = ax(sessionNum).UserData.t.(series)(min([numel(ax(sessionNum).UserData.t.(series)), 15]));
-                end
-                xmax = max(xmaxSeries);
-                xlim(ax(sessionNum), [-0.05*xmax, xmax]);
-%                 plot(ax(sessionNum), 1:numel(tdiff_FPGA), tdiff_FPGA, 1:numel(tdiff_Video), tdiff_Video);
-                title(ax(sessionNum),abbreviateText(sessionDataRoots{sessionNum}, 120), 'Interpreter', 'none', 'HitTest', 'off');
-                yticks(ax(sessionNum), [])
-            end
-            % Waits until accept button is clicked
-            uiwait(f);
-            % If user cancelled alignment, just exit:
-            if ~isvalid(f)
-                startingTrialNums = [];
-                return;
-            end
-            % Collect results from GUI into struct array
-            startingTrialNums = struct();
-            for sessionNum = 1:numel(sessionDataRoots)
-                for seriesNum = 1:numel(f.UserData.seriesList)
-                    series = f.UserData.seriesList{seriesNum};
-                    startingTrialNums(sessionNum).(series) = ax(sessionNum).UserData.StartingTrialNum.(series);
-                end
-            end
-            delete(f)
-        end
-        
-        function [topMaskPath, botMaskPath] = matchMaskToVideo(app, videoName, SessionVideoRoot, SessionMaskRoot)
-            % Strip path and extension from videoname, if present.
-            [~, videoName, ~] = fileparts(videoName);
-            videos = findFilesByRegex(SessionVideoRoot, '.*\.avi$');
-            topMasks = findFilesByRegex(SessionMaskRoot, 'Top_[0-9]*\.mat$');
-            botMasks = findFilesByRegex(SessionMaskRoot, 'Bot_[0-9]*\.mat$');
-
-            if numel(topMasks) ~= numel(botMasks)
-               app.print('Warning: The number of top and bottom masks found do not match...something may be wrong. Check mask file numbering.')
-            elseif numel(topMasks) ~= numel(videos)
-                app.print('Warning: Number of videos found does not match the number of masks. Check the numbering system, directories, etc.')
-            end
-            
-            videoIndex = NaN;
-            for videoNum = 1:numel(videos)
-                [~, videoNameCheck, ~] = fileparts(videos{videoNum});
-                if strcmp(videoName, videoNameCheck)
-                    videoIndex = videoNum;
-                    break;
-                end
-            end
-            if isnan(videoIndex)
-                app.print('Error finding video in video directory...this shouldn''t happen...');
-            end
-            if numel(topMasks) >= videoIndex && numel(botMasks) >= videoIndex
-                topMaskPath = topMasks{videoIndex};
-                botMaskPath = botMasks{videoIndex};
-            else
-                topMaskPath = '';
-                botMaskPath = '';
-                app.print('Error - could not find mask that matches selected video - not enough masks in directory')
-            end
-        end
-
         function [videoHeight, videoWidth] = getSessionVideoFrameSize(app, sessionVideoDir)
-            videos = findFilesByRegex(sessionVideoDir, '.*\.avi$');
+            videos = findSessionVideos(sessionVideoDir, 'avi', @parsePCCFilenameTimestamp);
             % Set up video reader for first video in directory
             v = VideoReader(videos{1});
             % Get width and height of video (without loading whole video)
@@ -1335,7 +1221,7 @@ end
             % Configure measuring ruler
             try
                 app.measuringRuler = images.roi.Line(app.ImageAxes,'Position',[50, 50; 100, 50], 'Visible', 'off');
-                addlistener(app.measuringRuler, 'Position', 'PostSet', @app.updateRulerLength);
+                addlistener(app.measuringRuler, 'MovingROI', @app.updateRulerLength);
             catch ME
                 app.print('Sorry, ruler does not appear to be available in this version of MATLAB. Upgrade to 2020 or later.')
                 app.measuringRuler = images.roi.Line.empty();
@@ -1748,8 +1634,7 @@ end
             app.print('...done labeling avi files with cue and laser')            
         end
 
-        % Button pushed function: 
-        % BGetlicksegmentationandkinematicsButton
+        % Button pushed function: BGetlicksegmentationandkinematicsButton
         function BGetlicksegmentationandkinematicsButtonPushed(app, event)
             saveFlag = true;
             dataTable = app.getDataTable();
@@ -1771,7 +1656,7 @@ end
             cines = [];
             dataTable = app.getDataTable();
             for k = 1:numel(dataTable.SessionVideoDirs)
-                cines = [cines, findFilesByRegex(dataTable.SessionVideoDirs{k}, '.*\.cine')'];
+                cines = [cines, findSessionVideos(dataTable.SessionVideoDirs{k}, 'cine', @parsePCCFilenameTimestamp)'];
             end
             queue = parallel.pool.DataQueue();
             afterEach(queue, @app.print);
@@ -1799,7 +1684,7 @@ end
             end
             app.print('Initiating user alignment of FPGA and video trials...');
             app.print('FPGA == green | Video == cyan');
-            startingTrialNums = app.alignTDiffs(sessionMaskRoots, tdiffs_FPGA, tdiffs_Video);
+            startingTrialNums = alignTDiffs(sessionMaskRoots, tdiffs_FPGA, tdiffs_Video);
             if isempty(startingTrialNums)
                 app.print('     ...user alignment of FPGA and video trials cancelled.');
                 return;
@@ -1896,8 +1781,7 @@ end
             app.Output.Value = '';
         end
 
-        % Button pushed function: 
-        % DIncorporateFPGAdataintotiptracksButton
+        % Button pushed function: DIncorporateFPGAdataintotiptracksButton
         function DIncorporateFPGAdataintotiptracksButtonPushed(app, event)
             app.print('Incorporating FPGA data into tip tracks...')
             dataTable = app.getDataTable();
@@ -2113,12 +1997,15 @@ helpMsg = {...
 
             % Create ImageAxes
             app.ImageAxes = uiaxes(app.UIFigure);
-            app.ImageAxes.Box = 'on';
-            app.ImageAxes.BoxStyle = 'full';
             app.ImageAxes.XTick = [];
+            app.ImageAxes.XTickLabelRotation = 0;
             app.ImageAxes.XTickLabel = {'[ ]'};
             app.ImageAxes.YTick = [];
+            app.ImageAxes.YTickLabelRotation = 0;
+            app.ImageAxes.ZTickLabelRotation = 0;
+            app.ImageAxes.BoxStyle = 'full';
             app.ImageAxes.LineWidth = 1;
+            app.ImageAxes.Box = 'on';
             app.ImageAxes.Position = [15 180 223 507];
 
             % Create SessionDataTable
