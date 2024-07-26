@@ -13,18 +13,39 @@ if ischar(paths)
 end
 
 % Pattern to extract the timestamp portion of the file path
-extractionPattern = '[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]{2} [0-9]{4} [0-9]{2} [0-9]{2} [0-9]{2}\.[0-9]{3}';
+extractionPattern1 = '[A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]{2} [0-9]{4} [0-9]{2} [0-9]{2} [0-9]{2}\.[0-9]{3}';
 % PCC filename timestamp format
-timestampFormat = 'eee MMM dd yyyy HH mm ss.SSS';
+timestampFormat1 = 'eee MMM dd yyyy HH mm ss.SSS';
 
-% Extract the timestamp portion of the path
-timestampText = regexp(paths, extractionPattern, 'match');
+% A second possible pattern to try (produced by PCC v3.5+ with {timeF}
+% wildcard in filename string
+extractionPattern2 = 'Y[0-9]{8}H[0-9]{6}\.[0-9]{9}';
+timestampFormat2 = '''Y''yyyyMMdd''H''HHmmss.SSSSSSSSS';
 
-% Only one timestamp per path, so flatten cell array
-timestampText = cellfun(@(x)x{1}, timestampText, 'UniformOutput', false);
+extractionPatterns = {extractionPattern1, extractionPattern2};
+timestampFormats = {timestampFormat1, timestampFormat2};
 
-% Attempt to parse the timestamp into a datetime object
-timestamps = datetime(timestampText, 'InputFormat', timestampFormat);
+timestamps = NaT(1, length(paths));
+timestampText = cell(1, length(paths));
+
+for formatNum = 1:length(extractionPatterns)
+    extractionPattern = extractionPatterns{formatNum};
+    timestampFormat = timestampFormats{formatNum};
+
+    % Get mask for which timestamps are still un-parsed
+    natMask = isnat(timestamps);
+
+    % Extract the timestamp portion of the path for unparsed timestamps
+    timestampText(natMask) = regexp(paths(natMask), extractionPattern, 'match');
+    
+    patternFound = cellfun(@(x)~isempty(x), timestampText);
+
+    % Only one timestamp per path, so flatten cell array for unparsed timestamps
+    timestampText(natMask & patternFound) = cellfun(@(x)x{1}, timestampText(natMask & patternFound), 'UniformOutput', false);
+
+    % Attempt to parse the timestamp into a datetime object
+    timestamps(natMask & patternFound) = datetime(timestampText(natMask & patternFound), 'InputFormat', timestampFormat);
+end
 
 % Warn user if any of the paths were not parseable
 if any(isnat(timestamps))
