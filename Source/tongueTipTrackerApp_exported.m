@@ -67,6 +67,8 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         FrameLabel                      matlab.ui.control.Label
         SessionDataTable                matlab.ui.control.Table
         ImageAxes                       matlab.ui.control.UIAxes
+        ContextMenu                     matlab.ui.container.ContextMenu
+        SingleframedebugMenu            matlab.ui.container.Menu
     end
 
 
@@ -144,9 +146,11 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         
         function populateVideoSessionNode(app, sessionNode)
             videoDir = sessionNode.NodeData;
-            videos = dir(fullfile(videoDir, '*.avi'));
+            videos = findSessionVideos(videoDir, 'avi', @parsePCCFilenameTimestamp);
             for j = 1:numel(videos)
-                uitreenode(sessionNode, 'Text', videos(j).name, 'Tag', 'video', 'NodeData', struct());
+                [~, videoName, videoExt] = fileparts(videos{j});
+                videoFileName = [videoName, videoExt];
+                uitreenode(sessionNode, 'Text', videoFileName, 'Tag', 'video', 'NodeData', struct());
             end
         end
         
@@ -934,11 +938,16 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
                 app.ParallelPoolStateLabel.Text = {labelTitle, ['Ready - ', num2str(p.NumWorkers), ' workers']};
             end
         end
-        
-        function getTongueTipSessionsTrack(app)
-            app.print('Beginning tongue tip tracking for all sessions.');
-            dataTable = app.getDataTable();
-            sessionDataRoots = dataTable.SessionMaskDirs;
+
+        function im_shifts = getImShifts(app, dataTable)
+            % Calulate a list of im_shifts from the data table
+            % im_shift is a measure of how much the top view is shifted
+            %   relative to the bottom view due to mirror misalignment, 
+            %   measured in pixels..
+
+            if ~exist('dataTable', 'var')
+                dataTable = app.getDataTable();
+            end
 
             % Extract bottom and top spout positions for all session
             bot_spout_positions = cellfun(@str2num, dataTable.Bot_Spout_X, 'UniformOutput', false);
@@ -949,17 +958,20 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             % are slightly different calculated im_shifts for different
             % spout positions within a session)
             im_shifts = cellfun(@(x, y)mode(x-y), bot_spout_positions, top_spout_positions);
+        end
+
+        function getTongueTipSessionsTrack(app)
+            app.print('Beginning tongue tip tracking for all sessions.');
+            dataTable = app.getDataTable();
+            sessionDataRoots = dataTable.SessionMaskDirs;
+            
+            im_shifts = app.getImShifts(dataTable);
 
             verboseFlag = app.VerboseCheckBox.Value;
 %             makeMovieFlag = app.MakeMoviesCheckBox.Value;
             saveDataFlag = app.SaveTrackingDataCheckBox.Value;
 %             savePlotsFlag = app.SaveKinematicsPlotsCheckBox.Value;
 %             plotFlag = app.PlotKinematicsCheckBox.Value;
-            
-            % set up base params
-            baseParams = setTrackParams();
-            baseParams.N_pix_min = 100;
-            baseParams.figPosition = [1921, 41, 1920, 963];
             
             % If parallel pool hasn't been initialized, initialize it.
             app.StartParallelPoolButtonPushed()
@@ -970,8 +982,8 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
                 if verboseFlag
                     app.print(['Processing session #', num2str(j), ': ', sessionDataRoot])
                 end
-                params(j) = baseParams;
-                params(j).im_shift = im_shifts(j);
+                % set up tongue tip tracking params
+                params(j) = setTTTTrackParams(im_shifts(j));
                 
                 % Queue for getting stdout from parfeval functions
                 queue = parallel.pool.DataQueue();
@@ -1019,102 +1031,11 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         function column = getColumnNum(app, dataField)
             column = find(strcmp(app.getDataTable(true).Properties.VariableNames, dataField));
         end
-
-        function startingTrialNums = alignTDiffs(app, sessionDataRoots, tdiffs_FPGA, tdiffs_Video)
-            f = figure('Units', 'normalized', 'Position', [0.1, 0, 0.8, 0.85]);
-            % Overwrite function close callback to prevent user from
-            % clicking "x", which would destroy data. User must use
-            % "Accept" button instead
-            function customCloseReqFcn(src, callbackdata)
-                selection = questdlg('Are you sure you want to discard your alignment? Use the ''Accept'' button instead to keep your alignment.',...
-                    'Are you sure?',...
-                    'Yes, discard','No, keep','Yes, discard'); 
-                switch selection 
-                    case 'Yes, discard'
-                        delete(src);
-                    case 'No, keep'
-                        return;
-                end
-            end
-            
-            set(f, 'CloseRequestFcn', @customCloseReqFcn);
-            % Create accept button, which resumes main thread execution
-            % when clicked.
-            acceptButton = uicontrol(f, 'Position',[10 10 200 20],'String','Accept trial alignments','Callback','uiresume(gcbf)');
-%            pan(f, 'xon');
-%            zoom(f, 'xon');
-            tdiffs.FPGA = tdiffs_FPGA;
-            tdiffs.Video = tdiffs_Video;
-
-            sgtitle({'For each session, select the earliest starting trial interval',...
-                     'for FPGA and Video trials so they line up with each other.',...
-                     'Click Accept when done'});
-            
-            f.UserData = struct();
-            f.UserData.seriesList = {'FPGA', 'Video'};
-            f.UserData.faceColors.FPGA = 'g';
-            f.UserData.faceColors.Video = 'c';
-            f.UserData.yVal.FPGA = 0;
-            f.UserData.yVal.Video = 0.5;
-            f.UserData.h = 0.5;
-            for sessionNum = 1:numel(sessionDataRoots)
-                ax(sessionNum) = subplot(numel(sessionDataRoots), 1, sessionNum, 'HitTest', 'off', 'YLimMode', 'manual');
-                hold(ax(sessionNum), 'on');
-                ax(sessionNum).UserData = struct();
-                ax(sessionNum).UserData.selectedRectangle = struct();
-                for seriesNum = 1:numel(f.UserData.seriesList)
-                    % For each series (FPGA and Video), add useful info to
-                    %   axis UserData
-                    series = f.UserData.seriesList{seriesNum};
-                    ax(sessionNum).UserData.sessionNum = sessionNum;
-                    ax(sessionNum).UserData.StartingTrialNum.(series) = 1;
-                    ax(sessionNum).UserData.selectedRectangle.(series) = [];
-                    ax(sessionNum).UserData.rectangles.(series) = matlab.graphics.primitive.Rectangle.empty();
-                    ax(sessionNum).UserData.tdiff.(series) = tdiffs.(series){sessionNum}; %tdiffs_FPGA{sessionNum};
-                    ax(sessionNum).UserData.t.(series) = [0, cumsum(ax(sessionNum).UserData.tdiff.(series))];
-                    
-                    seriesShift = ax(sessionNum).UserData.t.(series)(ax(sessionNum).UserData.StartingTrialNum.(series));
-                    for trialNum = 1:(numel(ax(sessionNum).UserData.t.(series))-1)
-                        % Create rectangles and save handles to axis UserData
-                        rectangleID.trialNum = trialNum;
-                        rectangleID.series = series;
-                        ax(sessionNum).UserData.rectangles.(series)(trialNum) = ...
-                            rectangle(ax(sessionNum), ...
-                                      'Position', [ax(sessionNum).UserData.t.(series)(trialNum) - seriesShift, f.UserData.yVal.(series), ax(sessionNum).UserData.tdiff.(series)(trialNum), f.UserData.h], ...
-                                      'FaceColor', f.UserData.faceColors.(series), ...
-                                      'ButtonDownFcn', @tdiffRectangleCallback, ...
-                                      'UserData', rectangleID);
-                    end
-                    xmaxSeries(seriesNum) = ax(sessionNum).UserData.t.(series)(min([numel(ax(sessionNum).UserData.t.(series)), 15]));
-                end
-                xmax = max(xmaxSeries);
-                xlim(ax(sessionNum), [-0.05*xmax, xmax]);
-%                 plot(ax(sessionNum), 1:numel(tdiff_FPGA), tdiff_FPGA, 1:numel(tdiff_Video), tdiff_Video);
-                title(ax(sessionNum),abbreviateText(sessionDataRoots{sessionNum}, 120), 'Interpreter', 'none', 'HitTest', 'off');
-                yticks(ax(sessionNum), [])
-            end
-            % Waits until accept button is clicked
-            uiwait(f);
-            % If user cancelled alignment, just exit:
-            if ~isvalid(f)
-                startingTrialNums = [];
-                return;
-            end
-            % Collect results from GUI into struct array
-            startingTrialNums = struct();
-            for sessionNum = 1:numel(sessionDataRoots)
-                for seriesNum = 1:numel(f.UserData.seriesList)
-                    series = f.UserData.seriesList{seriesNum};
-                    startingTrialNums(sessionNum).(series) = ax(sessionNum).UserData.StartingTrialNum.(series);
-                end
-            end
-            delete(f)
-        end
         
         function [topMaskPath, botMaskPath] = matchMaskToVideo(app, videoName, SessionVideoRoot, SessionMaskRoot)
             % Strip path and extension from videoname, if present.
             [~, videoName, ~] = fileparts(videoName);
-            videos = findFilesByRegex(SessionVideoRoot, '.*\.avi$');
+            videos = findSessionVideos(SessionVideoRoot, 'avi', @parsePCCFilenameTimestamp);
             topMasks = findFilesByRegex(SessionMaskRoot, 'Top_[0-9]*\.mat$');
             botMasks = findFilesByRegex(SessionMaskRoot, 'Bot_[0-9]*\.mat$');
 
@@ -1146,7 +1067,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         end
 
         function [videoHeight, videoWidth] = getSessionVideoFrameSize(app, sessionVideoDir)
-            videos = findFilesByRegex(sessionVideoDir, '.*\.avi$');
+            videos = findSessionVideos(sessionVideoDir, 'avi', @parsePCCFilenameTimestamp);
             % Set up video reader for first video in directory
             v = VideoReader(videos{1});
             % Get width and height of video (without loading whole video)
@@ -1374,7 +1295,7 @@ end
             % Configure measuring ruler
             try
                 app.measuringRuler = images.roi.Line(app.ImageAxes,'Position',[50, 50; 100, 50], 'Visible', 'off');
-                addlistener(app.measuringRuler, 'Position', 'PostSet', @app.updateRulerLength);
+                addlistener(app.measuringRuler, 'MovingROI', @app.updateRulerLength);
             catch ME
                 app.print('Sorry, ruler does not appear to be available in this version of MATLAB. Upgrade to 2020 or later.')
                 app.measuringRuler = images.roi.Line.empty();
@@ -1809,7 +1730,7 @@ end
             cines = [];
             dataTable = app.getDataTable();
             for k = 1:numel(dataTable.SessionVideoDirs)
-                cines = [cines, findFilesByRegex(dataTable.SessionVideoDirs{k}, '.*\.cine')'];
+                cines = [cines, findSessionVideos(dataTable.SessionVideoDirs{k}, 'cine', parsePCCFilenameTimestamp)'];
             end
             queue = parallel.pool.DataQueue();
             afterEach(queue, @app.print);
@@ -1837,7 +1758,7 @@ end
             end
             app.print('Initiating user alignment of FPGA and video trials...');
             app.print('FPGA == green | Video == cyan');
-            startingTrialNums = app.alignTDiffs(sessionMaskRoots, tdiffs_FPGA, tdiffs_Video);
+            startingTrialNums = alignTDiffs(sessionMaskRoots, tdiffs_FPGA, tdiffs_Video);
             if isempty(startingTrialNums)
                 app.print('     ...user alignment of FPGA and video trials cancelled.');
                 return;
@@ -1956,10 +1877,16 @@ end
                 case '2D Fakeout'
                     % Get calibration for spout position
                     spoutCalibrations = {};
+
+                    % Calculate im_shift for each session
+                    im_shifts = app.getImShifts(dataTable);
+
                     for sessionNum = 1:length(sessionMaskRoots)
                         spoutCalibrations{sessionNum} = app.getSpoutPositionCalibration(sessionNum);
+                        params(sessionNum) = setTTTTrackParams(im_shifts(sessionNum));
                     end
-                    [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials, spoutCalibrations);
+                    motorSpeeds = [];
+                    [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials, spoutCalibrations, motorSpeeds, params);
             end
             
             if ~islogical(result) || ~result
@@ -2212,6 +2139,24 @@ helpMsg = {...
         function FPGAdataformatDropDownValueChanged(app, event)
             value = app.FPGAdataformatDropDown.Value;
             
+        end
+
+        % Menu selected function: SingleframedebugMenu
+        function SingleframedebugMenuSelected(app, event)
+            dataTable = app.getDataTable();
+            sessionDataRoots = dataTable.SessionMaskDirs;
+            im_shifts = app.getImShifts(dataTable);
+            sessionNum = app.sessionDataTableSelection(1);
+            answer = inputdlg({'Video #', 'Frame #'}, sprintf('Select options for tip track debugging (session #%d):', sessionNum), 1, {'1', '1'});
+            if isempty(answer)
+                app.print('Tip track debug cancelled');
+                return
+            end
+            app.print('Beginning single frame tip track debug');
+            videoIdx = str2double(answer{1});
+            frameIdx = str2double(answer{2});
+            debugTongueTipTracking(sessionDataRoots{sessionNum}, videoIdx, frameIdx, im_shifts(sessionNum));
+            app.print('Finished single frame tip track debug');
         end
     end
 
@@ -2641,6 +2586,17 @@ helpMsg = {...
             app.AutorevertoldhealsCheckBox.Text = 'Auto-revert old heals';
             app.AutorevertoldhealsCheckBox.Position = [807 423 133 22];
             app.AutorevertoldhealsCheckBox.Value = true;
+
+            % Create ContextMenu
+            app.ContextMenu = uicontextmenu(app.UIFigure);
+
+            % Create SingleframedebugMenu
+            app.SingleframedebugMenu = uimenu(app.ContextMenu);
+            app.SingleframedebugMenu.MenuSelectedFcn = createCallbackFcn(app, @SingleframedebugMenuSelected, true);
+            app.SingleframedebugMenu.Text = 'Single frame debug';
+            
+            % Assign app.ContextMenu
+            app.TrackTongueTipsButton.ContextMenu = app.ContextMenu;
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

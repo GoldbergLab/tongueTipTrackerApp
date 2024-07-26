@@ -6,7 +6,6 @@
 %   -translating/scaling top image so tongue tip matches in both images
 %   -calculating region properties of masks
 %--------------------------------------------------------------------------
-
 function [bot_frame, top_frame, bot_s, top_s, im_shift, im_scale] = ...
     processTongueMasks(bot_frame, top_frame, params, top_dim, centroid_avoid)
 %--------------------------------------------------------------------------

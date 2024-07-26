@@ -18,11 +18,19 @@ function videoTimes = getTongueVideoTimestamps(videoRoot)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Get Times of all the videos
-videoList = rdir(fullfile(videoRoot,'*.avi'));
-videoTimes = [];
-for i=1:numel(videoList)        
-    name_cells = strsplit(videoList(i).name,'\');
-    name_cells = strsplit(name_cells{end});
-    trial_time = str2num(name_cells{5})/24+str2num(name_cells{6})/(24*60)+str2num(name_cells{7})/(24*60*60);
-    videoTimes(i) = trial_time;
-end
+
+% Get all video timestamps as an array of datetime objects
+[~, videoTimestamps] = findSessionVideos(videoRoot, 'avi', @parsePCCFilenameTimestamp);
+
+% Find the timestamp of the first video
+startTimestamp = videoTimestamps(1);
+
+% Find the start time of the first video
+startTime = timeofday(startTimestamp);
+
+% Calculate the timestamp of the midnight before the first video
+startMidnightTimestamp = startTimestamp - startTime;
+
+% Express the video times as fractions of a day relative to the midnight
+% before the first video
+videoTimes = days(videoTimestamps - startMidnightTimestamp);
