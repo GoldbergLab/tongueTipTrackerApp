@@ -138,9 +138,16 @@ save(strcat(dirlist_root,'\nl_struct.mat'),'nl_struct');
        ili = [nan;ili];
        k = 0;
        for i = 1:numel(dirlist)
-           for j = 1:size(nl_struct(i).lick_pairs,1)
-               k = k +1;
-               nl_struct(i).prev_lick(j) = ili(k);
+           % 07/25/24 - BSI added this to take care of no licks if doing
+           % photovalidation experiments, where there are no licks or licks
+           % are disconnected from the lick sensor. 
+           if isempty(nl_struct(i).lick_pairs)
+               nl_struct(i).prev_lick = [];
+           else
+               for j = 1:size(nl_struct(i).lick_pairs,1)
+                   k = k +1;
+                   nl_struct(i).prev_lick(j) = ili(k);
+               end
            end
        end
        
