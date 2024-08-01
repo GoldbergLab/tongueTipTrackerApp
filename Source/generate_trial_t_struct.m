@@ -1,4 +1,4 @@
-function [t_stats_trial, response_bin, abort_trial] = generate_trial_t_struct(tip_tracks, video_num, onset, offset, cue_onset, laser_trial, lowpass_filter)
+function [t_stats_trial, abort_trial] = generate_trial_t_struct(tip_tracks, video_num, onset, offset, cue_onset, laser_trial, lowpass_filter)
 arguments
     tip_tracks struct = struct('tip_coords', zeros(0, 3), 'centroid_coords', zeros(0, 3), 'volumes', zeros(0, 3))
     video_num double = []
@@ -11,11 +11,6 @@ end
 
 abort_trial = false;
 t_stats_trial = struct();
-if (onset - cue_onset) < 1300
-    response_bin = 1;
-else
-    response_bin = 0;
-end
 
 centroid_x = tip_tracks.centroid_coords(onset:offset,1);
 centroid_y = tip_tracks.centroid_coords(onset:offset,2);
@@ -39,7 +34,7 @@ end
 idx = 1:numel(tip_x);
 vect_interp = isnan(tip_x);
 
-if any(vect_interp) && ~all(vect_interp)
+if ~null_trial
     tip_x(vect_interp) = interp1(idx(~vect_interp),tip_x(~vect_interp),idx(vect_interp),'linear','extrap');                    
     tip_y(vect_interp) = interp1(idx(~vect_interp),tip_y(~vect_interp),idx(vect_interp),'linear','extrap');
     tip_z(vect_interp) = interp1(idx(~vect_interp),tip_z(~vect_interp),idx(vect_interp),'linear','extrap');
@@ -173,3 +168,5 @@ t_stats_trial.ILM_dur = ret_ind-prot_ind;
 t_stats_trial.ILM_pathlength = sum(magspeed_tip(prot_ind:ret_ind));
 t_stats_trial.ILM_PeakSpeed = max(magspeed_tip(prot_ind:ret_ind));
 t_stats_trial.ILM_NumAcc = sum((accel_peaks_p_cent>prot_ind)&(accel_peaks_p_cent<ret_ind));
+
+t_stats_trial.lick_index = [];

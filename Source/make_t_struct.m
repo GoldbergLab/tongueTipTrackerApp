@@ -59,9 +59,6 @@ for sessionNum = 1:num_sessions
     end
         
     for video_num = streak_on:streak_off
-        % Initialize t_stats rows for this trial/video
-        t_stats_video = [];  
-        
         lick_exist_vect = tip_tracks(video_num).volumes;
         nan_vect = isnan(lick_exist_vect);
         offset_vect = find(diff(nan_vect)>0);
@@ -99,7 +96,11 @@ for sessionNum = 1:num_sessions
                 onset =  onsetOffsetPairs(lick_num, 1);
                 offset = onsetOffsetPairs(lick_num, 2);
 
-                [t_stats_video(lick_num), response_bin{sessionNum}(video_num), abort_trial] = ...
+                if onset - cue_onset < 1300
+                    response_bin{sessionNum}(video_num) = 1;
+                end
+
+                [t_stats_lick, abort_trial] = ...
                     generate_trial_t_struct(...
                         tip_tracks(video_num), ...
                         video_num, ...
@@ -110,14 +111,14 @@ for sessionNum = 1:num_sessions
                         lowpass_filter...
                         );
 
-                if abort_trial
+                if ~abort_trial
+                    t_stats_video(lick_num) = t_stats_lick;
+                else
                     %%% ******** Note - this seems a bit off - if lick N
                     %%% has no volumne minimum, then all licks M > N are
                     %%% skipped. Not sure that's the best behavior, but to
                     %%% change it just switch a "continue" for that "break".
                     fprintf('Video #%d: Skipping rest of trial - no volume minima found in lick #%d\n', video_num, lick_num);
-                    % Delete current incomplete lick row:
-                    t_stats_video(lick_num) = [];
                     break;
                 end
             end
@@ -146,6 +147,7 @@ for sessionNum = 1:num_sessions
 
         % Add on this video's t_stats rows on to the t_stats struct
         t_stats_session = [t_stats_session, t_stats_video]; %#ok<*AGROW> 
+        clear t_stats_video
     end
 
     % Store this session's full t-stats struct
@@ -177,6 +179,7 @@ if numel(streak_num)<1
     brush(f);
     brush('on');
     uiwait(f);
+    
     for sessionNum = 1:num_sessions
         if isgraphics(p(sessionNum, 1))
             selection = find(p(sessionNum, 1).BrushData);
