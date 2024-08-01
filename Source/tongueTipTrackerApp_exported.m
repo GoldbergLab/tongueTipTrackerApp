@@ -1839,6 +1839,8 @@ end
                             [nl_struct,raster_struct,result] = nplick_struct(sessionFPGARoot, plotOutput);
                         case "1D Fakeout"
                             [nl_struct,raster_struct,result] = nplick_struct_1D(sessionFPGARoot, plotOutput);
+                        case "Anesthesia"
+                            [nl_struct,raster_struct,result] = nplick_struct_anesthesia(sessionFPGARoot, plotOutput);
                         case "2D Fakeout"
                             [nl_struct,raster_struct,result] = nplick_struct_2D(sessionFPGARoot, plotOutput);                            
                     end
@@ -2532,7 +2534,7 @@ helpMsg = {...
 
             % Create FPGAdataformatDropDown
             app.FPGAdataformatDropDown = uidropdown(app.UIFigure);
-            app.FPGAdataformatDropDown.Items = {'Classic', '1D Fakeout', '2D Fakeout'};
+            app.FPGAdataformatDropDown.Items = {'Classic', '1D Fakeout', 'Anesthesia', '2D Fakeout'};
             app.FPGAdataformatDropDown.ValueChangedFcn = createCallbackFcn(app, @FPGAdataformatDropDownValueChanged, true);
             app.FPGAdataformatDropDown.Position = [809 582 130 22];
             app.FPGAdataformatDropDown.Value = '2D Fakeout';
