@@ -1,7 +1,7 @@
-function [t_stats_trial, abort_trial] = generate_trial_t_struct(tip_tracks, video_num, onset, offset, cue_onset, laser_trial, lowpass_filter)
+function [t_stats_trial, abort_trial] = generate_trial_t_struct(video_num, tip_tracks, onset, offset, cue_onset, laser_trial, lowpass_filter)
 arguments
-    tip_tracks struct = struct('tip_coords', zeros(0, 3), 'centroid_coords', zeros(0, 3), 'volumes', zeros(0, 3))
     video_num double = []
+    tip_tracks struct = struct('tip_coords', zeros(0, 3), 'centroid_coords', zeros(0, 3), 'volumes', zeros(0, 3))
     onset double = []
     offset double = []
     cue_onset double = []
