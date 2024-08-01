@@ -33,7 +33,7 @@ for sessionNum = 1:num_sessions
     load(fullfile(sessionDataRoots{sessionNum},'tip_track.mat'), 'tip_tracks');
 
     num_trials(sessionNum) = numel(video_list);
-    t_stats_session = [];
+    t_stats = [];
     
     for video_num = 1:num_videos
         % Parse cue time and laser on/off status from video filename
@@ -146,12 +146,12 @@ for sessionNum = 1:num_sessions
         end
 
         % Add on this video's t_stats rows on to the t_stats struct
-        t_stats_session = [t_stats_session, t_stats_video]; %#ok<*AGROW> 
+        t_stats = [t_stats, t_stats_video]; %#ok<*AGROW> 
         clear t_stats_video
     end
 
     % Store this session's full t-stats struct
-    t_stats_all{sessionNum} = t_stats_session;
+    t_stats_all{sessionNum} = t_stats;
 end
 
 % Prompt user to trim sessions to lick streaks
@@ -197,15 +197,15 @@ if numel(streak_num)<1
             streak_off = max(selection);
         end
 
-        t_stats_session = t_stats_all{sessionNum};
+        t_stats = t_stats_all{sessionNum};
 
-        start_index = find([t_stats_session.trial_num] >= streak_on);
+        start_index = find([t_stats.trial_num] >= streak_on);
         start_index = start_index(1);
-        stop_index = find([t_stats_session.trial_num] <= streak_off);
+        stop_index = find([t_stats.trial_num] <= streak_off);
         stop_index = stop_index(end);
-        t_stats_session = t_stats_session(start_index:stop_index);        
+        t_stats = t_stats(start_index:stop_index);        
 
-        t_stats_all{sessionNum} = t_stats_session;
+        t_stats_all{sessionNum} = t_stats;
     end
     delete(f);
 end
@@ -217,7 +217,7 @@ end
 
 if save_flag
     for sessionNum = 1:num_sessions
-        t_stats_session = t_stats_all{sessionNum};
-        save(fullfile(sessionDataRoots{sessionNum}, 't_stats'), 't_stats_session', 'streak_on', 'streak_off');
+        t_stats = t_stats_all{sessionNum};
+        save(fullfile(sessionDataRoots{sessionNum}, 't_stats'), 't_stats', 'streak_on', 'streak_off');
     end
 end
