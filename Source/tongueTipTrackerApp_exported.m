@@ -3,6 +3,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
+        IncludePlaceholderLicks         matlab.ui.control.CheckBox
         AutorevertoldhealsCheckBox      matlab.ui.control.CheckBox
         C2OcclusioneditorButton         matlab.ui.control.Button
         CHealSpoutOcclusionsButton      matlab.ui.control.Button
@@ -84,7 +85,7 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
         markerColors                struct
         dataTableAutoSaveName       char
         measuringRuler              images.roi.Line
-        maxSpoutPoints           uint16
+        maxSpoutPoints              uint16
     end
 
     methods (Access = private)
@@ -1718,8 +1719,9 @@ end
             for sessionNum = 1:length(sessionDataRoots)
                 fiducialPoints{sessionNum} = app.getFiducialPoint(sessionNum);
             end
+            includePlaceholderLick = app.IncludePlaceholderLicks.Value;
             % Create t_struct.mat file for each session
-            make_t_struct(sessionDataRoots, sessionVideoRoots, saveFlag, [], fiducialPoints);
+            make_t_struct(sessionDataRoots, sessionVideoRoots, saveFlag, [], fiducialPoints, includePlaceholderLick);
             app.print('     ...done calculating lick kinematics & creating t_struct file');
         end
 
@@ -2586,6 +2588,12 @@ helpMsg = {...
             app.AutorevertoldhealsCheckBox.Text = 'Auto-revert old heals';
             app.AutorevertoldhealsCheckBox.Position = [807 423 133 22];
             app.AutorevertoldhealsCheckBox.Value = true;
+
+            % Create IncludePlaceholderLicks
+            app.IncludePlaceholderLicks = uicheckbox(app.UIFigure);
+            app.IncludePlaceholderLicks.Tooltip = {'If a trial has no detected licks, include a null placeholder lick row in the t_stats file?'};
+            app.IncludePlaceholderLicks.Text = {'Include placeholder '; 'licks'};
+            app.IncludePlaceholderLicks.Position = [807 327 130 30];
 
             % Create TrackTongueTipsContextMenu
             app.TrackTongueTipsContextMenu = uicontextmenu(app.UIFigure);
