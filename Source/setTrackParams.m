@@ -67,7 +67,7 @@ parameters.savePlotsFlag = false ;
 parameters.saveDataFlag = false ; 
 parameters.verboseFlag = false ; % print out frame count?
 
-if ~exist('user_parameters', 'var')
+if exist('user_parameters', 'var')
     % If user passed in user_parameters struct, use those values to
     % override the defaults
     user_fields = fields(user_parameters);
