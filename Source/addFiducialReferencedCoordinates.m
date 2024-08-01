@@ -26,6 +26,10 @@ function t_stats = addFiducialReferencedCoordinates(t_stats, fiducialPoint)
 % Loop over t_stats struct array, adding new fiducial-referenced fields
 
 x_tips = {t_stats.tip_x};
+
+% Filter out any placeholder licks
+x_tips = x_tips(~cellfun(@isempty, x_tips));
+
 first_x_tip = cellfun(@(x) x(1), x_tips);
 fiducial_xMed = median(first_x_tip);
 
