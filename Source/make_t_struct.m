@@ -1,4 +1,4 @@
-function [ t_stats_all ] = make_t_struct(sessionDataRoots, sessionVideoRoots, save_flag, streak_num, fiducial)
+function [ t_stats_all ] = make_t_struct(sessionDataRoots, sessionVideoRoots, save_flag, streak_num, fiducial, includePlaceholderLicks)
 %MAKE_XY_STRUCT Summary of this function goes here
 %   get xy points from t_struct, separate them into individual licks and
 %   estimate kinematic parameters (e.g. pathlength, speed, direction)
@@ -8,16 +8,17 @@ arguments
     save_flag (1, 1) logical
     streak_num
     fiducial
+    includePlaceholderLicks (1, 1) logical = false
 end
 
-filterCoeffs = fdesign.lowpass('N,F3db', 3, 50, 1000);
-lowpassFilter = design(filterCoeffs, 'butter');
+filter_coeffs = fdesign.lowpass('N,F3db', 3, 50, 1000);
+lowpass_filter = design(filter_coeffs, 'butter');
 
 num_sessions = numel(sessionDataRoots);
 
 % Initialize variables
 num_trials = zeros(1, num_sessions);
-laser_trial = cell(1, num_sessions);
+laser_trials = cell(1, num_sessions);
 response_bin = cell(1, num_sessions);
 
 for sessionNum = 1:num_sessions
@@ -25,8 +26,8 @@ for sessionNum = 1:num_sessions
     num_videos = numel(video_list);
 
     % Initialize variables
-    laser_trial{sessionNum} = zeros(1, num_videos);
-    cue_onset = zeros(1, num_videos);
+    laser_trials{sessionNum} = zeros(1, num_videos);
+    cue_onsets = zeros(1, num_videos);
 
     % Load tip_track.mat file, containing the tongue tip coordinates
     load(fullfile(sessionDataRoots{sessionNum},'tip_track.mat'), 'tip_tracks');
@@ -41,11 +42,11 @@ for sessionNum = 1:num_sessions
         vidname_cells = strsplit(video_name, '_');
         descriptor = vidname_cells{end};        
         if descriptor(end) == 'L'
-            laser_trial{sessionNum}(video_num) = 1;
-            cue_onset(video_num) = str2double(descriptor(2:end-1));
+            laser_trials{sessionNum}(video_num) = 1;
+            cue_onsets(video_num) = str2double(descriptor(2:end-1));
         else
-            laser_trial{sessionNum}(video_num) = 0;
-            cue_onset(video_num) = str2double(descriptor(2:end));
+            laser_trials{sessionNum}(video_num) = 0;
+            cue_onsets(video_num) = str2double(descriptor(2:end));
         end
     end
     
@@ -92,136 +93,33 @@ for sessionNum = 1:num_sessions
         end
         num_licks = size(onsetOffsetPairs, 1);
         if num_licks > 0
+            cue_onset = cue_onsets(video_num);
+            laser_trial = laser_trials{sessionNum}(video_num);
             for lick_num = 1:num_licks
-                centroid_x = tip_tracks(video_num).centroid_coords(onsetOffsetPairs(lick_num,1):onsetOffsetPairs(lick_num,2),1);
-                centroid_y = tip_tracks(video_num).centroid_coords(onsetOffsetPairs(lick_num,1):onsetOffsetPairs(lick_num,2),2);
-                centroid_z = tip_tracks(video_num).centroid_coords(onsetOffsetPairs(lick_num,1):onsetOffsetPairs(lick_num,2),3);
+                onset =  onsetOffsetPairs(lick_num, 1);
+                offset = onsetOffsetPairs(lick_num, 2);
 
-                tip_x = tip_tracks(video_num).tip_coords(onsetOffsetPairs(lick_num,1):onsetOffsetPairs(lick_num,2),1);
-                tip_y = tip_tracks(video_num).tip_coords(onsetOffsetPairs(lick_num,1):onsetOffsetPairs(lick_num,2),2);
-                tip_z = tip_tracks(video_num).tip_coords(onsetOffsetPairs(lick_num,1):onsetOffsetPairs(lick_num,2),3);
-                
-                volume = tip_tracks(video_num).volumes(onsetOffsetPairs(lick_num,1):onsetOffsetPairs(lick_num,2));
-                
-                if (onsetOffsetPairs(lick_num,1)-cue_onset(video_num))<1300 % && (nansum(area_xy_top) + nansum(area_xy_bot))>125000 %&& (pairs(kk,1)-cue_onset(frameNum))>40                    
-                    response_bin{sessionNum}(video_num) = 1;
-                end    
+                [t_stats_video(lick_num), response_bin{sessionNum}(video_num), abort_trial] = ...
+                    generate_trial_t_struct(...
+                        tip_tracks(video_num), ...
+                        video_num, ...
+                        onset, ...
+                        offset, ...
+                        cue_onset, ...
+                        laser_trial, ...
+                        lowpass_filter...
+                        );
 
-                %nan filter with extrapolation
-                ix = 1:numel(tip_x);
-                vect_interp = isnan(tip_x);
-
-                tip_x(vect_interp) = interp1(ix(~vect_interp),tip_x(~vect_interp),ix(vect_interp),'linear','extrap');                    
-                tip_y(vect_interp) = interp1(ix(~vect_interp),tip_y(~vect_interp),ix(vect_interp),'linear','extrap');
-                tip_z(vect_interp) = interp1(ix(~vect_interp),tip_z(~vect_interp),ix(vect_interp),'linear','extrap');
-
-                tip_x = filter_and_scale(tip_x,lowpassFilter);
-                tip_y = filter_and_scale(tip_y,lowpassFilter);
-                tip_z = filter_and_scale(tip_z,lowpassFilter);
-
-                centroid_x = filter_and_scale(centroid_x,lowpassFilter);
-                centroid_y = filter_and_scale(centroid_y,lowpassFilter);
-                centroid_z = filter_and_scale(centroid_z,lowpassFilter);
-
-                % 3D Speed
-                x_plt_c = centroid_x;
-                y_plt_c = centroid_y;
-                z_plt_c = centroid_z;
-                magspeed_cent = sqrt(diff(x_plt_c).^2 + diff(y_plt_c).^2 + diff(z_plt_c).^2);
-
-                % 3D Speed for Tip
-                x_plt_t = tip_x;
-                y_plt_t = tip_y;
-                z_plt_t = tip_z;
-                magspeed_tip = sqrt(diff(x_plt_t).^2 + diff(y_plt_t).^2 + diff(z_plt_t).^2);                    
-
-                % 3D Accelerations
-                accel = diff(magspeed_cent);
-                mag_accel = abs(accel);
-                [~,accel_peaks_p_cent] = findpeaks(accel);
-                [~,accel_peaks_tot_cent] = findpeaks(mag_accel);
-
-                accel = diff(magspeed_tip);
-                mag_accel = abs(accel);
-                [~,accel_peaks_p_tip] = findpeaks(accel);
-                [~,accel_peaks_tot_tip] = findpeaks(mag_accel);
-
-                %Pathlength
-                pathlength_3D_c = sum(magspeed_cent);
-                pathlength_3D_t = sum(magspeed_tip);
-
-                % Duration
-                dur = onsetOffsetPairs(lick_num,2)-onsetOffsetPairs(lick_num,1);
-
-                % Package the kinematic data
-                t_stats_video(lick_num).centroid_x = centroid_x;
-                t_stats_video(lick_num).centroid_y = centroid_y;
-                t_stats_video(lick_num).centroid_z = centroid_z;
-
-                t_stats_video(lick_num).tip_x = tip_x;
-                t_stats_video(lick_num).tip_y = tip_y;
-                t_stats_video(lick_num).tip_z = tip_z;
-
-                t_stats_video(lick_num).magspeed_c = magspeed_cent;
-                t_stats_video(lick_num).magspeed_t = magspeed_tip;
-                t_stats_video(lick_num).pathlength_3D_c = pathlength_3D_c;
-                t_stats_video(lick_num).pathlength_3D_t = pathlength_3D_t;
-%                     l_traj(mm).dist_from_fid = dist_from_fid;
-
-                t_stats_video(lick_num).accel_peaks_pos_t = accel_peaks_p_tip;
-                t_stats_video(lick_num).accel_peaks_tot_t = accel_peaks_tot_tip;                                                            
-
-                t_stats_video(lick_num).accel_peaks_pos_c = accel_peaks_p_cent;
-                t_stats_video(lick_num).accel_peaks_tot_c = accel_peaks_tot_cent;
-%                     
-                t_stats_video(lick_num).dur = dur;
-
-                % Tongue Kinematic Segmentation
-                [seginfo,redir_pts,rad_curv] = get_t_kinsegments(t_stats_video(lick_num));
-                t_stats_video(lick_num).redir_pts = redir_pts;
-                t_stats_video(lick_num).seginfo = seginfo;
-                t_stats_video(lick_num).rad_curv = rad_curv;                                                                 
-
-                % Tortuosity
-                curv = 1./rad_curv;
-                tort = sum(curv.^2)/pathlength_3D_c;
-                t_stats_video(lick_num).tort = tort;
-
-                %Get Protraction/Retraction from Volume information.
-                volume = filter_and_scale(volume,lowpassFilter);
-                vol_diff = abs(diff(volume));
-                try
-                    [~,locs_asmin] = findpeaks(1./vol_diff);
-
-                    prot_ind = locs_asmin(1);
-                    ret_ind = locs_asmin(end);
-                catch ME
+                if abort_trial
                     %%% ******** Note - this seems a bit off - if lick N
                     %%% has no volumne minimum, then all licks M > N are
                     %%% skipped. Not sure that's the best behavior, but to
                     %%% change it just switch a "continue" for that "break".
-                    disp(getReport(ME));
                     fprintf('Video #%d: Skipping rest of trial - no volume minima found in lick #%d\n', video_num, lick_num);
                     % Delete current incomplete lick row:
                     t_stats_video(lick_num) = [];
                     break;
                 end
-                %Package the trial information/metadata
-                t_stats_video(lick_num).time_rel_cue = onsetOffsetPairs(lick_num,1)-cue_onset(video_num);
-                t_stats_video(lick_num).laser = laser_trial{sessionNum}(video_num)&(onsetOffsetPairs(lick_num,1)>cue_onset(video_num))&(onsetOffsetPairs(lick_num,1)<(cue_onset(video_num)+750));
-                t_stats_video(lick_num).laser_trial = laser_trial{sessionNum}(video_num);
-                t_stats_video(lick_num).trial_num = video_num;
-                t_stats_video(lick_num).volume = volume;
-                t_stats_video(lick_num).pairs = onsetOffsetPairs(lick_num,:);
-                t_stats_video(lick_num).prot_ind = prot_ind;
-                t_stats_video(lick_num).ret_ind = ret_ind;                    
-
-                %ILM_information
-                t_stats_video(lick_num).ILM_dur = ret_ind-prot_ind;
-                t_stats_video(lick_num).ILM_pathlength = sum(magspeed_tip(prot_ind:ret_ind));
-                t_stats_video(lick_num).ILM_PeakSpeed = max(magspeed_tip(prot_ind:ret_ind));
-                t_stats_video(lick_num).ILM_NumAcc = sum((accel_peaks_p_cent>prot_ind)&(accel_peaks_p_cent<ret_ind));
-
             end
             if numel(t_stats_video)>0
                 lick_rel_to_cue = sign([t_stats_video.time_rel_cue]);
@@ -238,10 +136,14 @@ for sessionNum = 1:num_sessions
                     t_stats_video(lickNum2).lick_index = lick_index(lickNum2);
                 end
             end
-        else
-            % No 
-            t_stats_video = [];
         end
+
+        if includePlaceholderLicks && isempty(t_stats_video)
+            % Add placeholder lick to represent the trial 
+            [t_stats_video(lick_num), response_bin{sessionNum}(video_num)] = ...
+                    generate_trial_t_struct();
+        end
+
         % Add on this video's t_stats rows on to the t_stats struct
         t_stats_session = [t_stats_session, t_stats_video]; %#ok<*AGROW> 
     end
@@ -261,10 +163,10 @@ if numel(streak_num)<1
         ax(sessionNum, 1) = subplot(num_sessions, 1, a);
         axis(ax(sessionNum, 1), 'tight');
         yticks(ax(sessionNum, 1), [0, 1]);
-        trialIdx = find(laser_trial{sessionNum}==0);
+        trialIdx = find(laser_trials{sessionNum}==0);
         xticks(ax(sessionNum, 1), min(trialIdx):max(trialIdx));
-        if numel(response_bin{sessionNum}(laser_trial{sessionNum}==0))
-            p(sessionNum, 1) = bar(ax(sessionNum, 1), trialIdx, response_bin{sessionNum}(laser_trial{sessionNum}==0));
+        if numel(response_bin{sessionNum}(laser_trials{sessionNum}==0))
+            p(sessionNum, 1) = bar(ax(sessionNum, 1), trialIdx, response_bin{sessionNum}(laser_trials{sessionNum}==0));
         end
         ylim(ax(sessionNum, 1), [-0.2, 1.2]);
         title(ax(sessionNum, 1), {['Session ', abbreviateText(sessionDataRoots{sessionNum}, 15)], 'Trials with responses'}, 'Interpreter', 'none');
