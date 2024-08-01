@@ -139,7 +139,7 @@ for sessionNum = 1:num_sessions
             end
         end
 
-        if includePlaceholderLicks && isempty(t_stats_video)
+        if includePlaceholderLicks && (~exist('t_stats_video', 'var') || isempty(t_stats_video))
             % Add placeholder lick to represent the trial 
             [t_stats_video(lick_num), response_bin{sessionNum}(video_num)] = ...
                     generate_trial_t_struct();
