@@ -146,8 +146,10 @@ for sessionNum = 1:num_sessions
         end
 
         % Add on this video's t_stats rows on to the t_stats struct
-        t_stats = [t_stats, t_stats_video]; %#ok<*AGROW> 
-        clear t_stats_video
+        if exist('t_stats_video', 'var')
+            t_stats = [t_stats, t_stats_video]; %#ok<*AGROW> 
+            clear t_stats_video
+        end
     end
 
     % Store this session's full t-stats struct
@@ -212,7 +214,10 @@ end
 
 for sessionNum = 1:num_sessions
     % Add in fiducial-referenced kinematics:
-    t_stats_all{sessionNum} = addFiducialReferencedCoordinates(t_stats_all{sessionNum}, fiducial{sessionNum});
+    t_stats_session = t_stats_all{sessionNum};
+    if ~isempty(t_stats_session)
+        t_stats_all{sessionNum} = addFiducialReferencedCoordinates(t_stats_session, fiducial{sessionNum});
+    end
 end
 
 if save_flag
