@@ -170,3 +170,5 @@ t_stats_trial.ILM_PeakSpeed = max(magspeed_tip(prot_ind:ret_ind));
 t_stats_trial.ILM_NumAcc = sum((accel_peaks_p_cent>prot_ind)&(accel_peaks_p_cent<ret_ind));
 
 t_stats_trial.lick_index = [];
+
+t_stats_trial.placeholder = false;

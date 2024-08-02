@@ -143,6 +143,7 @@ for sessionNum = 1:num_sessions
             % Add placeholder lick to represent the trial 
             [t_stats_video(lick_num), response_bin{sessionNum}(video_num)] = ...
                     generate_trial_t_struct(video_num);
+            t_stats_video(lick_num).placeholder = true;
         end
 
         % Add on this video's t_stats rows on to the t_stats struct
