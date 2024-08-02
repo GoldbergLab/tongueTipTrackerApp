@@ -122,7 +122,7 @@ end
 if ~null_trial
     dur = offset-onset;
 else
-    dur = 0;
+    dur = NaN;
 end
 
 % Package the kinematic data
@@ -182,34 +182,40 @@ if ~null_trial
         return;
     end
 else
-    prot_ind = [];
-    ret_ind = [];
+    prot_ind = NaN;
+    ret_ind = NaN;
 end
 
 % Package the trial information/metadata
-t_stats_row.time_rel_cue = onset-cue_onset;
 if ~null_trial
     laser_valid = (onset>cue_onset) & (onset<(cue_onset+750));
+    t_stats_row.time_rel_cue = onset-cue_onset;
+    t_stats_row.volume = volume;
+    t_stats_row.pairs = [onset, offset];
 else
     laser_valid = false;
+    t_stats_row.time_rel_cue = NaN;
+    t_stats_row.volume = NaN;
+    t_stats_row.pairs = [NaN, NaN];
 end
 t_stats_row.laser = laser_trial && laser_valid;
 t_stats_row.laser_trial = laser_trial;
 t_stats_row.trial_num = trial_num;
-t_stats_row.volume = volume;
-t_stats_row.pairs = [onset, offset];
 t_stats_row.prot_ind = prot_ind;
 t_stats_row.ret_ind = ret_ind;
 
 % ILM_information
 if ~null_trial
     t_stats_row.ILM_dur = ret_ind - prot_ind;
+    t_stats_row.ILM_pathlength = sum(magspeed_tip(prot_ind:ret_ind));
+    t_stats_row.ILM_PeakSpeed = max(magspeed_tip(prot_ind:ret_ind));
+    t_stats_row.ILM_NumAcc = sum((accel_peaks_p_cent>prot_ind)&(accel_peaks_p_cent<ret_ind));
 else
-    t_stats_row.ILM_dur = 0;
+    t_stats_row.ILM_dur = NaN;
+    t_stats_row.ILM_pathlength = NaN;
+    t_stats_row.ILM_PeakSpeed = NaN;
+    t_stats_row.ILM_NumAcc = NaN;
 end
-t_stats_row.ILM_pathlength = sum(magspeed_tip(prot_ind:ret_ind));
-t_stats_row.ILM_PeakSpeed = max(magspeed_tip(prot_ind:ret_ind));
-t_stats_row.ILM_NumAcc = sum((accel_peaks_p_cent>prot_ind)&(accel_peaks_p_cent<ret_ind));
 
 t_stats_row.lick_index = [];
 
