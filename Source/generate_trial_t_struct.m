@@ -1,12 +1,24 @@
-function [t_stats_trial, abort_trial] = generate_trial_t_struct(video_num, tip_tracks, onset, offset, cue_onset, laser_trial, lowpass_filter)
+function [t_stats_trial, abort_trial] = generate_trial_t_struct(options)
 arguments
-    video_num double = []
-    tip_tracks struct = struct('tip_coords', zeros(0, 3), 'centroid_coords', zeros(0, 3), 'volumes', zeros(0, 3))
-    onset double = []
-    offset double = []
-    cue_onset double = []
-    laser_trial = false
-    lowpass_filter = []
+    options.video_num double = []
+    options.tip_tracks = []
+    options.onset double = []
+    options.offset double = []
+    options.cue_onset double = []
+    options.laser_trial = false
+    options.lowpass_filter = []
+end
+
+video_num = options.video_num;
+tip_tracks = options.tip_tracks;
+onset = options.onset;
+offset = options.offset;
+cue_onset = options.cue_onset;
+laser_trial = options.laser_trial;
+lowpass_filter = options.lowpass_filter;
+
+if isempty(tip_tracks)
+    tip_tracks = struct('tip_coords', zeros(0, 3), 'centroid_coords', zeros(0, 3), 'volumes', zeros(0, 3));
 end
 
 abort_trial = false;
