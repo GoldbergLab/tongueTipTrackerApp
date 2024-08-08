@@ -1103,12 +1103,12 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
             % Insert bottom and top masks into video data, using pix-shift
             %   to set position of top mask in video coordinates.
             %   Top mask is from pix_shift+1 down, bottom mask is
-            [hBot, ~, ~] = size(maskDataBot);
-            [hTop, ~, ~] = size(maskDataTop);
+            [hBot, wBot, ~] = size(maskDataBot);
+            [hTop, wTop, ~] = size(maskDataTop);
             hVid = videoSize(1);
-            wVid = videoSize(2);
-            maskData((1+pix_shift(1)):(hTop+pix_shift(1)), 1:wVid, :) = maskDataTop;
-            maskData((hVid - hBot + 1):hVid, 1:wVid, :) = maskData((hVid - hBot + 1):hVid, 1:wVid, :) + maskDataBot;
+            %wVid = videoSize(2);
+            maskData((1+pix_shift(1)):(hTop+pix_shift(1)), 1:wTop, :) = maskDataTop;
+            maskData((hVid - hBot + 1):hVid, 1:wBot, :) = maskData((hVid - hBot + 1):hVid, 1:wBot, :) + maskDataBot;
         end
         
         function frameNum = getCurrentFrameNum(app)
@@ -1803,6 +1803,8 @@ end
                             [~, result] = ppscript(sessionFPGARoot, '%f %s %s %s %s %s %s', 7);
                         case "1D Fakeout"
                             [~, result] = ppscript(sessionFPGARoot, '%f %s %s %s %s %s %s', 7);
+                        case "Anesthesia"
+                            [~, result] = ppscript(sessionFPGARoot, '%f %f %s %s %s %s %s %s', 8);
                         case "2D Fakeout"
                             [~, result] = ppscript(sessionFPGARoot, '%f %f %f %s %s %s %s %s %s', 9);
                     end
