@@ -22,8 +22,13 @@ timestampFormat1 = 'eee MMM dd yyyy HH mm ss.SSS';
 extractionPattern2 = 'Y[0-9]{8}H[0-9]{6}\.[0-9]{9}';
 timestampFormat2 = '''Y''yyyyMMdd''H''HHmmss.SSSSSSSSS';
 
-extractionPatterns = {extractionPattern1, extractionPattern2};
-timestampFormats = {timestampFormat1, timestampFormat2};
+% A third possible pattern to try (produced by PCC v3.5+ with {timeF}
+% wildcard in filename string
+extractionPattern3 = 'Y[0-9\ ]{8}H[0-9\ ]{6}\.[0-9]{9}';
+timestampFormat3 = '''Y''yyyyMM d''H''HHmmss.SSSSSSSSS';
+
+extractionPatterns = {extractionPattern1, extractionPattern2, extractionPattern3};
+timestampFormats = {timestampFormat1, timestampFormat2, timestampFormat3};
 
 timestamps = NaT(1, length(paths));
 timestampText = cell(1, length(paths));
