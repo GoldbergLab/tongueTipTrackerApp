@@ -1874,11 +1874,11 @@ end
 
             processingPipeline = app.FPGAdataformatDropDown.Value;
             switch processingPipeline
-                case 'Classic'
+                case "Classic"
                     [vid_ind_arr, result] = align_videos_tolickdata(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials);
-                case '1D Fakeout'
+                case {"1D Fakeout", "Anesthesia"}
                     [vid_ind_arr, result] = align_videos_toFakeOutData_1D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials);
-                case '2D Fakeout'
+                case "2D Fakeout"
                     % Get calibration for spout position
                     spoutCalibrations = {};
 
