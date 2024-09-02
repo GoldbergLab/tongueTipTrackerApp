@@ -43,20 +43,24 @@ end
 % this code now assumes no duplicates are present, can take care of this
 % posthoc
 dist_table = table([l_sp_struct.actuator1_ML]', [l_sp_struct.actuator2_AP]');
-unique_dist = table2array(unique(dist_table, 'rows'));
-[~, ind] = sort(unique_dist(:, 1));
-unique_dist = unique_dist(ind, :);
+unique_spout_positions = table2array(unique(dist_table, 'rows'));
+[~, ind] = sort(unique_spout_positions(:, 1));
+unique_spout_positions = unique_spout_positions(ind, :);
 
-for i=1:numel(l_sp_struct)
+for trial_num = 1:numel(l_sp_struct)
     vid_trial = find(vid_index==i);
     
     if numel(vid_trial)
-        vid_licks_ind = find([t_stats.trial_num] == vid_trial);
+        lick_indices = find([t_stats.trial_num] == vid_trial);
         
-        for kk = 1:numel(vid_licks_ind)
-            for ll = 1:size(unique_dist, 1)
-                if numel(find(unique_dist(ll, 1) == l_sp_struct(i).actuator1_ML && unique_dist(ll, 2) == l_sp_struct(i).actuator2_AP))
-                    t_stats(vid_licks_ind(kk)).fakeout_trial = ll;
+        for k = 1:numel(lick_indices)
+            lick_index = lick_indices(k);
+            
+            for spout_position_index = 1:size(unique_spout_positions, 1)
+                if ~isempty(find( ...
+                        unique_spout_positions(spout_position_index, 1) == l_sp_struct(i).actuator1_ML && ...
+                        unique_spout_positions(spout_position_index, 2) == l_sp_struct(i).actuator2_AP, 1))
+                    t_stats(lick_index).fakeout_trial = spout_position_index;
                 end
             end
         end
