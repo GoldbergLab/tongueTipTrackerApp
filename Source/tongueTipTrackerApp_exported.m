@@ -973,6 +973,18 @@ classdef tongueTipTrackerApp_exported < matlab.apps.AppBase
 %             savePlotsFlag = app.SaveKinematicsPlotsCheckBox.Value;
 %             plotFlag = app.PlotKinematicsCheckBox.Value;
             
+            % Check that data table is complete
+            for j = 1:numel(sessionDataRoots)
+                if ~exist(sessionDataRoots{j}, 'dir')
+                    uialert(app.UIFigure, sprintf('Session data root path not found: %s', sessionDataRoots{j}), 'Invalid table value');
+                    return
+                end
+                if isnan(im_shifts(j))
+                    uialert(app.UIFigure, sprintf('Please enter valid x spout positions for session #%d', j), 'Invalid table value');
+                    return
+                end
+            end
+
             % If parallel pool hasn't been initialized, initialize it.
             app.StartParallelPoolButtonPushed()
 
@@ -1779,7 +1791,7 @@ end
                 values = [values, startingTrialNums(sessionNum).Video];
                 dirs = [dirs, sessionMaskRoots{sessionNum}];
             end
-            app.setDataTableElements(properties, values, dirs)
+            app.setDataTableElements(properties, values, dirs);
             
         end
 
@@ -1807,6 +1819,8 @@ end
                             [~, result] = ppscript(sessionFPGARoot, '%f %f %s %s %s %s %s %s', 8);
                         case "2D Fakeout"
                             [~, result] = ppscript(sessionFPGARoot, '%f %f %f %s %s %s %s %s %s', 9);
+                        otherwise
+                            error('Unknown pipeline ID: %s', processingPipeline);
                     end
                     
                     if ~islogical(result) || ~result
@@ -1845,6 +1859,8 @@ end
                             [nl_struct,raster_struct,result] = nplick_struct_anesthesia(sessionFPGARoot, plotOutput);
                         case "2D Fakeout"
                             [nl_struct,raster_struct,result] = nplick_struct_2D(sessionFPGARoot, plotOutput);                            
+                        otherwise
+                            error('Unknown pipeline ID: %s', processingPipeline);                        
                     end
                     
                     if ~islogical(result) || ~result
@@ -1876,8 +1892,21 @@ end
             switch processingPipeline
                 case "Classic"
                     [vid_ind_arr, result] = align_videos_tolickdata(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials);
-                case {"1D Fakeout", "Anesthesia"}
+                case "1D Fakeout"
                     [vid_ind_arr, result] = align_videos_toFakeOutData_1D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials);
+                case "Anesthesia"
+                    % Get calibration for spout position
+                    spoutCalibrations = {};
+
+                    % Calculate im_shift for each session
+                    im_shifts = app.getImShifts(dataTable);
+
+                    for sessionNum = 1:length(sessionMaskRoots)
+                        spoutCalibrations{sessionNum} = app.getSpoutPositionCalibration(sessionNum);
+                        params(sessionNum) = setTTTTrackParams(im_shifts(sessionNum));
+                    end
+                    motorSpeeds = [];
+                    [vid_ind_arr, result] = align_videos_toFakeOutData_anesthesia(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials, spoutCalibrations, motorSpeeds, params);
                 case "2D Fakeout"
                     % Get calibration for spout position
                     spoutCalibrations = {};
@@ -1891,6 +1920,8 @@ end
                     end
                     motorSpeeds = [];
                     [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trials, spoutCalibrations, motorSpeeds, params);
+                otherwise
+                    error('Unknown pipeline ID: %s', processingPipeline);
             end
             
             if ~islogical(result) || ~result
