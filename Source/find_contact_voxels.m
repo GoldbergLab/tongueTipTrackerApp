@@ -192,7 +192,7 @@ for t = 1:numel(spout_x_mid_temp2)
             radius_temp = radius_temp + 3;
         elseif radius_temp > 15 && sum(tongue_contact_pts, 'all') == 0
             tongue_contact_pts = NaN;
-            contact_pts = NaN;
+            contact_pts = [NaN, NaN, NaN];
             break
         end
     end  
@@ -279,8 +279,8 @@ for t = 1:numel(spout_x_mid_temp2)
     % if there are contact points...
     if ~isempty(contact_pts)
         % and if there is more than one contact point, take the mean
-        if numel(contact_pts) > 3
-            tongue_dist{t, 1} = mean(contact_pts);
+        if size(contact_pts, 1) > 1
+            tongue_dist{t, 1} = mean(contact_pts, 1);
         % and if there is only 1 contact point, use that
         else
             tongue_dist{t, 1} = contact_pts;

@@ -15,11 +15,15 @@ end
 %     t_stats(ind(1)).analog_lick = l_sp_struct(trial_num_temp(i)).analog_lick;
 % end
 
-for i=1:numel(vid_index)
-    if ~isnan(vid_index(i)) && sum([t_stats.trial_num] == i) > 0
-        ind = find([t_stats.trial_num] == i);
-        t_stats(ind(1)).analog_lick = l_sp_struct(vid_index(i)).analog_lick;
+if isfield(l_sp_struct, 'analog_lick')
+    for i=1:numel(vid_index)
+        if ~isnan(vid_index(i)) && sum([t_stats.trial_num] == i) > 0
+            ind = find([t_stats.trial_num] == i);
+            t_stats(ind(1)).analog_lick = l_sp_struct(vid_index(i)).analog_lick;
+        end
     end
+else
+    warning('No analog lick field found in lick_struct')
 end
 
 % Old way from BSI - changed by BSI to new verison above
