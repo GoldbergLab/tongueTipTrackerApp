@@ -1,69 +1,49 @@
-function t_stats = assign_fakeout_type_1D(t_stats,l_sp_struct,vid_index)
+function t_stats = assign_fakeout_type_1D(t_stats, l_sp_struct, vid_indices)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% assign_fakeout_type_1D: assign the "spout fakeout type" to t_stats rwos
+% usage:  [t_stats] = assign_fakeout_type_1D(t_stats, l_sp_struct, 
+%                       vid_indices)
+%
+% where,
+%    t_stats is a t_stats structure, such as that produced by make_t_struct
+%    l_sp_struct is a lick_struct structure, such as that produced by 
+%       nplick_struct_1D, and packaged in the t_stats file make_t_struct
+%    vid_indices is a list of video indices to assign fakeout type to
+%    t_stats is the modified t_stats file
+%
+% This function adds a 'fakeout_trial' field to an existing t_stats
+%   structure, indicating what kind of spout movement is present for each
+%   trial (repeated for each lick row in the t_stats file).
+%
+% See also: make_t_struct, nplick_struct_1D, assign_fakeout_type_2D
+%
+% Version: 1.0
+% Author:  Brian Kardon
+% Email:   bmk27=cornell*org, brian*kardon=google*com
+% Real_email = regexprep(Email,{'=','*'},{'@','.'})
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Initialize the 'fakeout_trial' field
 for trial_num=1:numel(t_stats)
     t_stats(trial_num).fakeout_trial = nan;
 end
 
-% fakeout_act1_ML_opts = sort(unique([l_sp_struct.actuator1_ML]),'descend');
-% fakeout_act2_AP_opts = sort(unique([l_sp_struct.actuator2_AP]),'descend');
-% diff_fakeout_act1_ML_dist = diff(fakeout_act1_ML_opts);
-% diff_fakeout_act2_AP_dist = diff(fakeout_act2_AP_opts);
-% 
-% %remove short duplicate distances
-% close_index_ML = find(abs(diff_fakeout_act1_ML_dist)<0.2);
-% close_index_ML = reshape(close_index_ML,1,numel(close_index_ML));
-% close_index_ML(2,:) = close_index_ML(1,:) + 1;
-% 
-% %remove short duplicate distances
-% close_index_AP = find(abs(diff_fakeout_act2_AP_dist)<0.2);
-% close_index_AP = reshape(close_index_AP,1,numel(close_index_AP));
-% close_index_AP(2,:) = close_index_AP(1,:) + 1;
-% 
-% k = 0;
-% for i = 1:numel(fakeout_act1_ML_opts)
-%     isduplicate = find(close_index_ML(2,:) == i);
-%     if isduplicate
-%         fakeout_dist_act1_ML{k} = [fakeout_dist_act1_ML{k} fakeout_act1_ML_opts(i)];
-%     else
-%         k=k+1;
-%         fakeout_dist_act1_ML{k} = [fakeout_act1_ML_opts(i)];
-%     end   
-% end
-% 
-% m = 0;
-% for j = 1:numel(fakeout_act2_AP_opts)
-%     isduplicate = find(close_index_AP(2,:) == j);
-%     if isduplicate
-%         fakeout_dist_act2_AP{m} = [fakeout_dist_act2_AP{m} fakeout_act2_AP_opts(j)];
-%     else
-%         m=m+1;
-%         fakeout_dist_act2_AP{m} = [fakeout_act2_AP_opts(j)];
-%     end   
-% end
+% Find all unique spout positions
+unique_spout_positions = sort(unique([l_sp_struct.actuator1_AP]))';
 
-% this code now assumes no duplicates are present, can take care of this
-% posthoc
-dist_table = table([l_sp_struct.actuator1_AP]');
-unique_spout_positions = table2array(unique(dist_table, 'rows'));
-[~, ind] = sort(unique_spout_positions(:, 1));
-unique_spout_positions = unique_spout_positions(ind, :);
-
+% Loop over trials in the lick_struct
 for trial_num = 1:numel(l_sp_struct)
-    vid_trial = find(vid_index==trial_num);
+    vid_trial = find(vid_indices==trial_num);
     
+    % If the trial number matches one of the requested video indices ...
     if ~isempty(vid_trial)
+        % Get a list of lick indices in this trial number
         lick_indices = find([t_stats.trial_num] == vid_trial);
-        
-        for k = 1:numel(lick_indices)
-            lick_index = lick_indices(k);
-            
-            for spout_position_index = 1:size(unique_spout_positions, 1)
-                if ~isempty(find(unique_spout_positions(spout_position_index, 1) == l_sp_struct(trial_num).actuator1_AP, 1))
-                    t_stats(lick_index).fakeout_trial = spout_position_index;
-                end
-            end
-        end
+
+        % Find which fakeout spout position occurred in this trial
+        spout_position_index = find(unique_spout_positions == l_sp_struct(trial_num).actuator1_AP);
+        % Assign fakeout spout position value to all corresponding licks
+        [t_stats(lick_indices).fakeout_trial] = deal(spout_position_index); %#ok<FNDSB> 
     end
     
-end
-
 end
