@@ -1,4 +1,4 @@
-function [ t_stats_stack ] = make_t_struct(sessionDataRoots, dir_vid, save_flag, streak_num, fiducial)
+function [ t_stats_stack ] = make_t_struct(sessionDataRoots, sessionVideoRoots, save_flag, streak_num, fiducial)
 %MAKE_XY_STRUCT Summary of this function goes here
 %   get xy points from t_struct, separate them into individual licks and
 %   estimate kinematic parameters (e.g. pathlength, speed, direction)
@@ -13,32 +13,34 @@ response_bin = {};
 laser_trial = [];
 
 for sessionNum = 1:numel(sessionDataRoots)
-    dirlist_video = rdir(strcat(dir_vid{sessionNum},'\*.avi'));
-%   No longer used
-    %load(fullfile(sessionDataRoots{sessionNum},'mask_props.mat'));
+    videoPaths = findSessionVideos(sessionVideoRoots{sessionNum}, 'avi');
+
     load(fullfile(sessionDataRoots{sessionNum},'tip_track.mat'), 'tip_tracks');
-    numTrials(sessionNum) = numel(dirlist_video); %size(out_xy_top,1);
+    numTrials(sessionNum) = numel(videoPaths); %size(out_xy_top,1);
     t_stats=[];
     cue_onset = [];
     
-    for videoNum = 1:numel(dirlist_video)
-        vidname_cells = strsplit(dirlist_video(videoNum).name,'_');
-        descriptor = vidname_cells{end};
-        descriptor = descriptor(1:end-4);
-        
-        if descriptor(end) == 'L'
-            laser_trial{sessionNum}(videoNum) = 1;
-            cue_onset(videoNum) = str2num(descriptor(2:end-1));
-        else
-            laser_trial{sessionNum}(videoNum) = 0;
-            cue_onset(videoNum) = str2num(descriptor(2:end));
+    for videoNum = 1:numTrials(sessionNum)
+        [~, videoName, ~] = fileparts(videoPaths{videoNum});
+        videoNameParts = strsplit(videoName, '_');
+        filenameTag = videoNameParts{end};
+
+        if isempty(regexp(filenameTag, 'C[0-9]L?+', 'once'))
+            error('Cue and laser tag not found for video file: ''%s'', tag: ''%s''. Make sure you have tagged videos with laser and cue first.', videoPaths{videoNum}, filenameTag);
         end
         
+        if filenameTag(end) == 'L'
+            laser_trial{sessionNum}(videoNum) = 1;
+            cue_onset(videoNum) = str2num(filenameTag(2:end-1));
+        else
+            laser_trial{sessionNum}(videoNum) = 0;
+            cue_onset(videoNum) = str2num(filenameTag(2:end));
+        end
     end
     
     if numel(streak_num)>0
         streak_on = streak_num(sessionNum,1);
-        streak_off = min([numel(dirlist_video),numel(tip_tracks),streak_num(sessionNum,2)]);
+        streak_off = min([numTrials(sessionNum), numel(tip_tracks), streak_num(sessionNum, 2)]);
     else
         streak_on = 1;
         streak_off = numTrials(sessionNum);

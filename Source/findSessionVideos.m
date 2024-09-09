@@ -8,14 +8,10 @@ function [videoPaths, timestamps] = findSessionVideos(sessionVideoRoot, videoTyp
 %       parsePCCFilenameTimestamp function
 %   videoPaths = a cell array of video paths found sorted by timestamp
 %   timestamps = the extracted timestamps
-
-% Check if we need default timestamp parser
-if ~exist('timestampParser', 'var') || isempty(timestampParser)
-    timestampParser = @parsePCCFilenameTimestamp;
-end
-% Check if we need the default video type.
-if ~exist('videoType', 'var') || isempty(videoType)
-    videoType = 'avi';
+arguments
+    sessionVideoRoot {mustBeText}
+    videoType {mustBeMember(videoType, {'avi', 'cine'})} = 'avi'
+    timestampParser function_handle = @parsePCCFilenameTimestamp
 end
 
 % Check which video type the user wants
@@ -32,7 +28,9 @@ end
 matchPath = false;
 recurse = false;
 videoPaths = findFilesByRegex(sessionVideoRoot, pattern, matchPath, recurse);
+
 % Sort the videos by timestamp using the provided parser
 [videoPaths, I, timestamps] = sortFilesByTimestamp(videoPaths, timestampParser);
+
 % Sort the timestamps
 timestamps = timestamps(I);
