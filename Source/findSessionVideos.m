@@ -29,7 +29,9 @@ switch videoType
 end
 
 % Find videos in the given video directory
-videoPaths = findFilesByRegex(sessionVideoRoot, pattern);
+matchPath = false;
+recurse = false;
+videoPaths = findFilesByRegex(sessionVideoRoot, pattern, matchPath, recurse);
 % Sort the videos by timestamp using the provided parser
 [videoPaths, I, timestamps] = sortFilesByTimestamp(videoPaths, timestampParser);
 % Sort the timestamps
