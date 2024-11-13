@@ -1,4 +1,4 @@
-function t_stats = assign_CSM_SSM(t_stats)
+function t_stats = assign_CSM_SSM(t_stats, photoval_session)
 
 for i = 1:numel(t_stats)        
     if ~isnan(t_stats(i).spout_contact)  
@@ -12,7 +12,7 @@ for i = 1:numel(t_stats)
             t_stats(i).SSM_end = t_stats(i).ret_ind;
         % note that this elseif statement is to handle empty CSM durations
         % caused by placeholder trials - BSI
-        elseif ~isempty(t_stats(i).CSM_dur)
+        elseif ~isempty(t_stats(i).CSM_dur) && photoval_session == true
             t_stats(i).CSM_start = NaN;
             t_stats(i).CSM_end = NaN;
             t_stats(i).SSM_start = NaN;

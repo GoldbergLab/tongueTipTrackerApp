@@ -1,4 +1,4 @@
-function [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trial, spoutPositionCalibrations, motorSpeeds, params)
+function [vid_ind_arr, result] = align_videos_toFakeOutData_2D(sessionVideoRoots,sessionMaskRoots,sessionFPGARoots,time_aligned_trial, spoutPositionCalibrations, motorSpeeds, params, photoval_session)
 % result is either true if the processing completed successfully or a cell array of char arrays describing the error.
 result = true;
 vid_ind_arr = [];
@@ -26,7 +26,7 @@ for sessionNum = 1:numel(sessionVideoRoots)
     %% Assign Type of Lick   
     t_stats = assign_lick_type_2D(t_stats,l_sp_struct,vid_index);
     t_stats = assign_fakeout_type_2D(t_stats,l_sp_struct,vid_index);
-    t_stats = assign_CSM_SSM(t_stats);
+    t_stats = assign_CSM_SSM(t_stats, photoval_session);
     t_stats = lick_index_rel2contact(t_stats);
     t_stats = add_SSM_dur(t_stats);
     t_stats = assign_laser_2D(t_stats, sessionVideoRoots{sessionNum});
