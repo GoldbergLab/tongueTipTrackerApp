@@ -17,7 +17,7 @@ for sessionNum = 1:numel(sessionVideoRoots)
     vid_real_time = getTongueVideoTimestamps(sessionVideoRoots{sessionNum});
         
     %% Get mapping between video trials and FPGA trials
-    vid_index = mapVideoIndexToFPGATrialIndex(vid_real_time, lick_struct, time_aligned_trial);
+    vid_index = mapVideoIndexToFPGATrialIndex(vid_real_time, lick_struct, time_aligned_trial(sessionNum,:));
 
     load(strcat(sessionMaskRoots{sessionNum},'\t_stats.mat'),'t_stats')
     l_sp_struct = lick_struct;
