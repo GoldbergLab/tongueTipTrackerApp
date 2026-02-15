@@ -16,7 +16,11 @@ for i = 1:max([t_stats.trial_num])
         laserFrames = findLaserFrames(xml_file(i).name, [], true);
         [laserOn, laserOff] = findOnsetOffsetPairs([], laserFrames, true);
 %        [laserOn, laserOff] = findLaserOnLaserOff(xml_file(i).name);
-        laser_2D_temp = time_rel_cue > laserOn & time_rel_cue < laserOff;
+        if numel(laserOn) <= 1 % if cases to deal with situations where laser was somehow triggered twice in a session
+            laser_2D_temp = time_rel_cue > laserOn & time_rel_cue < laserOff;
+        else
+            laser_2D_temp = NaN;
+        end
         laser_2D([t_stats.trial_num] == i) = laser_2D_temp;
     else
         % do nothing, as it should be zeros
